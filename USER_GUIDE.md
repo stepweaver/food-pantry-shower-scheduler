@@ -199,11 +199,14 @@ A: After you check in, stay nearby. Staff will call you when a shower is ready.
 
 ### Accessing the Staff Dashboard
 
-1. Open your web browser
-2. Go to: `[Your Web App URL]?page=admin&key=[your-admin-key]`
-3. Replace `[your-admin-key]` with the password set in the Config sheet
+1. Open your web browser and go to the shower booking website (the same site guests use)
+2. Look for the **"Staff Login →"** link at the bottom of the page
+3. Click the link to open the login window
+4. Enter your staff password (the password set in the Config sheet)
+5. Click **"Login"** or press Enter
+6. You'll be automatically redirected to the staff dashboard
 
-**Tip:** Bookmark this page for quick access.
+**Tip:** After logging in, bookmark the dashboard page for quick access next time.
 
 ### What You'll See
 
@@ -221,63 +224,44 @@ The staff dashboard shows:
 
 For each booking, you can:
 
-1. **Check In** — Manually check someone in (if they can't use their phone)
+1. **Check In** — Manually check someone in (if they can't use their phone or need help)
+   - Click the green "Check In" button next to their booking
+   - This marks them as checked in and ready for their shower
 2. **No-Show** — Mark as expired if they didn't come
-3. **Cancel** — Cancel the booking entirely
+   - Click the yellow "No Show" button if someone didn't arrive
+   - This marks their booking as expired
+
+**Note:** All actions are done directly in the dashboard. You don't need to access the spreadsheet — the dashboard handles everything for you.
 
 ### Opening and Closing Bookings
 
 At the top of the dashboard, you can:
 
 1. **Close Bookings** — Temporarily stop new bookings
-   - A message box lets you explain why (example: "Plumbing issue today")
+   - Click "Close Booking"
+   - A message box appears where you can explain why (example: "Plumbing issue today")
    - People trying to book will see your message
+   - Click "Confirm Close Booking" to apply
 2. **Open Bookings** — Resume normal booking
+   - Click "Open Booking" to allow new reservations again
 
-### Manually Updating Status in the Spreadsheet
+### Changing Settings
 
-Sometimes you may need to update a guest's status directly in Google Sheets — for example, if the dashboard isn't loading or you need to make a bulk change.
+The dashboard includes a **Settings** section (click the ⚙️ icon to expand it) where you can adjust:
 
-#### How to Change a Guest's Status
+- **Shower Duration** — How long each appointment lasts (in minutes)
+- **Late Check-in Window** — How many minutes after the slot time someone can still check in
+- **Opening Time** — When the first shower is available
+- **Closing Time** — When the last shower slot ends
 
-1. Open your Google Spreadsheet
-2. Click on the **Slots** tab at the bottom
-3. Find the guest's row (by phone number or time)
-4. Click on the **status** cell (column D)
-5. Use the dropdown to select the new status:
-   - `booked` — Waiting to check in
-   - `checked_in` — They're here and waiting for a shower
-   - `expired` — They didn't show up (no-show)
-   - `cancelled` — Booking was cancelled
+To change settings:
 
-#### Setting Up the Status Dropdown (One-Time Setup)
+1. Click the **⚙️ Settings** section to expand it
+2. Make your changes to any of the fields
+3. Click **"Save Changes"** when done
+4. Changes take effect immediately
 
-If the dropdown isn't working yet, here's how to set it up:
-
-1. Open the Slots sheet
-2. Select column D (or D2:D1000 to skip the header)
-3. Go to **Data** → **Data validation**
-4. Click **Add rule**
-5. Set criteria to **Dropdown**
-6. Add these values (one per line):
-   - `booked`
-   - `checked_in`
-   - `expired`
-   - `cancelled`
-7. Check "Show dropdown in cell"
-8. Click **Done**
-
-#### Protecting the Sheet (Recommended)
-
-To prevent accidental edits to dates, times, or phone numbers:
-
-1. Go to **Data** → **Protect sheets and ranges**
-2. Click **+ Add a sheet or range**
-3. Select the **Slots** sheet
-4. Click **Except certain cells** and enter `D2:D1000`
-5. Click **Set permissions** → choose who can edit (yourself or specific staff)
-
-This lets staff change the status column while protecting everything else.
+**Tip:** The dashboard automatically refreshes every 30 seconds, but you can also click the **"↻ Refresh"** button to update the bookings list manually.
 
 ---
 
@@ -302,7 +286,7 @@ This tracks all bookings. Columns are:
 | booked_at     | E      | When they made the booking                |
 | checked_in_at | F      | When they checked in                      |
 
-**Note:** The status column (D) can be set up as a dropdown for easy manual updates. See "Manually Updating Status in the Spreadsheet" in Part 2.
+**Note:** Staff members update statuses through the admin dashboard interface — they don't need to access the spreadsheet directly.
 
 #### Sheet 2: "Config"
 
@@ -469,13 +453,13 @@ If you're setting up the system for the first time:
 
 ### For Staff
 
-| Task                   | How                                               |
-| ---------------------- | ------------------------------------------------- |
-| View bookings          | Open admin dashboard                              |
-| Check someone in       | Tap "Check In" next to their name                 |
-| Mark complete          | Tap "Complete" after their shower                 |
-| Close bookings         | Toggle "Close Bookings" and add a message         |
-| Update status manually | In Slots sheet, use dropdown in column D (status) |
+| Task             | How                                        |
+| ---------------- | ------------------------------------------ |
+| View bookings    | Open admin dashboard                       |
+| Check someone in | Tap "Check In" next to their name          |
+| Mark as no-show  | Tap "No Show" if they didn't arrive        |
+| Close bookings   | Tap "Close Booking" and add a message      |
+| Change settings  | Expand Settings section, edit values, Save |
 
 ### Config Quick Reference
 

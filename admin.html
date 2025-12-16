@@ -214,11 +214,6 @@
       color: white;
     }
     
-    .action-btn.noshow {
-      background: var(--warning);
-      color: white;
-    }
-    
     .action-btn.cancel {
       background: var(--error);
       color: white;
@@ -1069,9 +1064,20 @@
       
       switch (booking.status) {
         case 'booked':
+          // Check if we can cancel (only before booking time)
+          const now = new Date();
+          const [hours, minutes] = booking.time.split(':').map(Number);
+          const bookingTime = new Date(now);
+          bookingTime.setHours(hours, minutes, 0, 0);
+          
+          // Compare times in minutes for accurate comparison
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          const bookingTimeMinutes = hours * 60 + minutes;
+          const canCancel = currentMinutes < bookingTimeMinutes;
+          
           actions = `
             <button class="action-btn checkin" onclick="doAction('${phoneEsc}', '${timeEsc}', 'checkin')">Check In</button>
-            <button class="action-btn noshow" onclick="doAction('${phoneEsc}', '${timeEsc}', 'noshow')">No Show</button>
+            <button class="action-btn cancel" onclick="doAction('${phoneEsc}', '${timeEsc}', 'cancel')" ${canCancel ? '' : 'disabled'} title="${canCancel ? 'Cancel this booking' : 'Cannot cancel after booking time'}">Cancel</button>
           `;
           break;
         case 'checked_in':
@@ -1097,9 +1103,23 @@
     }
     
     function doAction(phone, time, action) {
+      // For cancel, verify the booking time hasn't passed
+      if (action === 'cancel') {
+        const now = new Date();
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        // Compare times in minutes for accurate comparison
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const bookingTimeMinutes = hours * 60 + minutes;
+        
+        if (currentMinutes >= bookingTimeMinutes) {
+          showToast('Cannot cancel after booking time', 'error');
+          return;
+        }
+      }
+      
       const confirmMessages = {
         checkin: 'Mark as checked in?',
-        noshow: 'Mark as no-show?',
         cancel: 'Cancel this booking?'
       };
       

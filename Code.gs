@@ -931,12 +931,19 @@ function adminAction(data) {
       invalidateSlotsCache();
       return { success: true, message: 'Marked as checked in.' };
 
-    case 'noshow':
-      sheet.getRange(booking.row, 4).setValue('expired');
-      invalidateSlotsCache();
-      return { success: true, message: 'Marked as no-show.' };
-
     case 'cancel':
+      // Only allow cancellation before the booking time
+      const now = getCurrentTime(config);
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const slotMinutes = timeToMinutes(booking.time);
+
+      if (currentMinutes >= slotMinutes) {
+        return {
+          success: false,
+          error: 'Cannot cancel booking after the scheduled time.',
+        };
+      }
+
       sheet.getRange(booking.row, 4).setValue('cancelled');
       invalidateSlotsCache();
       return { success: true, message: 'Booking cancelled.' };
