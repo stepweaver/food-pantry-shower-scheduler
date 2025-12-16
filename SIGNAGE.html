@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shower Reservations Sign (Demo) - Print This</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: white;
+      color: #1a1a1a;
+      padding: 0.5in;
+    }
+    
+    .sign {
+      border: 4px solid #1a3a3a;
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 7.5in;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #e0dcd7;
+    }
+    
+    .header .icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      color: #1a3a3a;
+      margin: 0;
+    }
+    
+    .steps {
+      margin: 1.5rem 0;
+    }
+    
+    .step {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+    
+    .step-number {
+      width: 40px;
+      height: 40px;
+      background: #e07b53;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      flex-shrink: 0;
+      margin-right: 1rem;
+    }
+    
+    .step-content {
+      font-size: 1.2rem;
+      padding-top: 0.35rem;
+    }
+    
+    .step-content strong {
+      color: #1a3a3a;
+    }
+    
+    .url-box {
+      background: #1a3a3a;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+    
+    .url-box .label {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin-bottom: 0.25rem;
+    }
+    
+    .url-box .url {
+      font-size: 1.4rem;
+      font-weight: bold;
+      word-break: break-all;
+    }
+    
+    .callout {
+      background: #fff8f5;
+      border: 2px solid #e07b53;
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+    
+    .callout h3 {
+      color: #c96a45;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .callout p {
+      font-size: 1.1rem;
+      color: #555;
+    }
+    
+    .footer {
+      text-align: center;
+      color: #666;
+      font-size: 0.95rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0dcd7;
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+      }
+      
+      .sign {
+        border-width: 3px;
+      }
+      
+      .no-print {
+        display: none;
+      }
+    }
+    
+    .no-print {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+    
+    .no-print button {
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      background: #1a3a3a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <p>Edit the URL below, then print this page.</p>
+    <button onclick="window.print()">🖨️ Print Sign</button>
+  </div>
+  
+  <div class="sign">
+    <div class="header">
+      <div class="icon">🚿</div>
+      <h1>Shower Reservations (Demo)</h1>
+    </div>
+    
+    <div class="url-box">
+      <div class="label">Book on your phone at:</div>
+      <div class="url" contenteditable="true">themishawakafoodpantry.com/shower</div>
+    </div>
+    
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <strong>Visit the link above</strong> on your phone
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <strong>Pick an available time</strong> that works for you
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <strong>Save your confirmation code</strong> (screenshot or write it down)
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <strong>Return within 10 minutes</strong> of your scheduled time
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <strong>Check in</strong> on your phone or tell staff your code
+        </div>
+      </div>
+    </div>
+    
+    <div class="callout">
+      <h3>You don't need to wait here!</h3>
+      <p>Check your status page anytime and come back when it's your turn.</p>
+    </div>
+    
+    <div class="footer">
+      Slots not claimed within 10 minutes are automatically released to others.
+    </div>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>Shower Booking (Demo) - Mishawaka Food Pantry</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1a3a3a">
+  <meta name="description" content="Book your shower appointment at Mishawaka Food Pantry">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Showers">
+  <meta name="application-name" content="Showers">
+  <meta name="msapplication-TileColor" content="#1a3a3a">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="format-detection" content="telephone=no">
+  
+  <!-- PWA Manifest - will be linked dynamically -->
+  <link rel="manifest" id="manifest-link">
+  
+  <!-- iOS Icons (data URI inline) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' width='180' height='180'%3E%3Crect width='180' height='180' rx='27' fill='%231a3a3a'/%3E%3Cg transform='translate(36, 27) scale(1.8)'%3E%3Crect x='20' y='5' width='20' height='6' rx='2' fill='%23e07b53'/%3E%3Crect x='25' y='11' width='10' height='4' rx='1' fill='%23e07b53'/%3E%3Cellipse cx='22' cy='28' rx='3' ry='5' fill='%23fff' opacity='0.9'/%3E%3Cellipse cx='30' cy='32' rx='3' ry='5' fill='%23fff' opacity='0.9'/%3E%3Cellipse cx='38' cy='28' rx='3' ry='5' fill='%23fff' opacity='0.9'/%3E%3Cellipse cx='26' cy='42' rx='3' ry='5' fill='%23fff' opacity='0.8'/%3E%3Cellipse cx='34' cy='46' rx='3' ry='5' fill='%23fff' opacity='0.8'/%3E%3Cellipse cx='30' cy='58' rx='3' ry='5' fill='%23fff' opacity='0.7'/%3E%3C/g%3E%3C/svg%3E">
+  
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a3a;
+      --primary-light: #2d5a5a;
+      --accent: #e07b53;
+      --accent-hover: #c96a45;
+      --bg: #f5f3f0;
+      --card-bg: #ffffff;
+      --text: #1a1a1a;
+      --text-light: #666666;
+      --success: #2d8a5f;
+      --warning: #c4912f;
+      --error: #c94444;
+      --border: #e0dcd7;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+    
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    
+    .header p {
+      opacity: 0.85;
+      font-size: 0.9rem;
+    }
+    
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .date-display {
+      text-align: center;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .date-display .day {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    
+    .date-display .date {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+    
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .form-group .hint {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 0.5rem;
+    }
+    
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    
+    .time-slot {
+      padding: 1rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+    
+    .time-slot:hover {
+      border-color: var(--primary);
+      background: rgba(26, 58, 58, 0.04);
+    }
+    
+    .time-slot.selected {
+      border-color: var(--accent);
+      background: rgba(224, 123, 83, 0.1);
+    }
+    
+    .time-slot .time {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .time-slot .spots {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 0.25rem;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 1.25rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #248a52;
+    }
+    
+    .btn-success:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      margin-top: 0.75rem;
+    }
+    
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .message {
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .message.error {
+      background: rgba(201, 68, 68, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(201, 68, 68, 0.2);
+    }
+    
+    .message.success {
+      background: rgba(45, 138, 95, 0.1);
+      color: var(--success);
+    }
+    
+    .message.warning {
+      background: rgba(196, 145, 47, 0.1);
+      color: var(--warning);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-light);
+    }
+    
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Skeleton loading shimmer */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, #f0ebe7 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    
+    .skeleton-text {
+      height: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .skeleton-text.short {
+      width: 60%;
+    }
+    
+    .skeleton-button {
+      height: 3.5rem;
+      margin-top: 1rem;
+    }
+    
+    .skeleton-date {
+      height: 4rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    /* Improved loading screen */
+    .loading-screen-content {
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .screen {
+      display: none;
+    }
+    
+    .screen.active {
+      display: block;
+    }
+    
+    /* Status Display Styles */
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    
+    .status-badge.booked {
+      background: rgba(224, 123, 83, 0.15);
+      color: var(--accent);
+    }
+    
+    .status-badge.checked_in {
+      background: rgba(45, 138, 95, 0.15);
+      color: var(--success);
+    }
+    
+    .status-header {
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+    
+    .time-display {
+      margin: 1rem 0;
+    }
+    
+    .time-display .label {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-bottom: 0.25rem;
+    }
+    
+    .time-display .time {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .countdown {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 12px;
+      color: white;
+    }
+    
+    .countdown .label {
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+    
+    .countdown .value {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+    
+    .countdown.urgent {
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    }
+    
+    .countdown.past {
+      background: linear-gradient(135deg, var(--warning), #d4a23a);
+    }
+    
+    .info-box {
+      background: rgba(26, 58, 58, 0.05);
+      padding: 1.25rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+    
+    .info-box h4 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+    
+    .info-box p {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    .checked-in-display {
+      text-align: center;
+    }
+    
+    .checked-in-display .icon {
+      width: 80px;
+      height: 80px;
+      background: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .checked-in-display .icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: white;
+      stroke-width: 3;
+    }
+    
+    .checked-in-display h2 {
+      color: var(--success);
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .checked-in-display p {
+      color: var(--text-light);
+      font-size: 1rem;
+    }
+    
+    .no-slots {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-light);
+    }
+    
+    .no-slots h3 {
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .footer-note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 1.5rem;
+      padding: 0 1rem;
+    }
+    
+    .privacy-note {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(26, 58, 58, 0.04);
+      border-radius: 8px;
+      line-height: 1.5;
+    }
+    
+    .privacy-note strong {
+      color: var(--primary);
+    }
+    
+    .clear-info-link {
+      color: var(--primary);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    
+    .clear-info-link:hover {
+      color: var(--accent);
+    }
+    
+    .refresh-note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 1rem;
+    }
+    
+    
+    .closed-display {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    
+    .closed-display .icon {
+      width: 80px;
+      height: 80px;
+      background: var(--warning);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .closed-display .icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: white;
+      stroke-width: 2.5;
+    }
+    
+    .closed-display h2 {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .closed-display p {
+      color: var(--text);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    
+    /* PWA Install Prompt */
+    .install-prompt {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      z-index: 1000;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .install-prompt.show {
+      display: flex;
+    }
+    
+    .install-prompt-text {
+      flex: 1;
+    }
+    
+    .install-prompt-text strong {
+      display: block;
+      font-size: 0.95rem;
+    }
+    
+    .install-prompt-text span {
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    
+    .install-prompt-btn {
+      padding: 0.6rem 1.2rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    
+    .install-prompt-close {
+      background: none;
+      border: none;
+      color: white;
+      opacity: 0.7;
+      cursor: pointer;
+      padding: 0.5rem;
+      font-size: 1.2rem;
+    }
+    
+    /* Standalone mode adjustments */
+    @media (display-mode: standalone) {
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      
+      .install-prompt {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Shower Reservations (Demo)</h1>
+    <p>Mishawaka Food Pantry</p>
+  </div>
+  
+  <div class="container">
+    <!-- Screen 0: Booking Closed -->
+    <div id="closedScreen" class="screen">
+      <div class="card">
+        <div class="closed-display">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor"/>
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-linecap="round"/>
+            </svg>
+          </div>
+          
+          <h2>Booking Unavailable</h2>
+          <p id="closedMessage">Shower booking is currently closed. Please check back later.</p>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 1rem;">
+        <div class="card-title">Already Have a Reservation?</div>
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
+          If you booked earlier, enter your phone number to check your status.
+        </p>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <input type="tel" id="closedPhone" placeholder="(574) 555-1234" autocomplete="tel">
+        </div>
+        <button type="button" class="btn btn-secondary" id="closedLookupBtn" disabled onclick="lookupFromClosed()" style="margin-top: 0;">
+          Check My Reservation
+        </button>
+      </div>
+      
+      <div class="info-box" style="margin-top: 1rem;">
+        <h4>Need Help?</h4>
+        <p>If you have questions about shower services, please speak with staff at the Mishawaka Food Pantry.</p>
+      </div>
+    </div>
+    
+    <!-- Screen 0.5: Initial Loading -->
+    <div id="loadingScreen" class="screen active">
+      <div class="loading-screen-content">
+        <!-- Skeleton date display -->
+        <div class="skeleton skeleton-date"></div>
+        
+        <div class="card">
+          <div class="skeleton skeleton-text short"></div>
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-button"></div>
+        </div>
+        
+        <div style="text-align: center; padding: 1.5rem; color: var(--text-light);">
+          <div class="spinner" style="width: 24px; height: 24px; border-width: 2px; margin: 0 auto 0.75rem;"></div>
+          <p style="font-size: 0.9rem;">Loading your reservation info...</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Screen 1: Phone Entry -->
+    <div id="phoneScreen" class="screen">
+      <div class="date-display">
+        <div class="day" id="currentDay">Loading...</div>
+        <div class="date" id="currentDate"></div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Check Your Status or Book</div>
+        
+        <div id="phoneError" class="message error" style="display: none;"></div>
+        
+        <div class="form-group">
+          <label for="phone">Enter Your Phone Number</label>
+          <input type="tel" id="phone" placeholder="(574) 555-1234" autocomplete="tel">
+          <p class="hint">We'll check if you have an existing reservation for today.</p>
+        </div>
+        
+        <button type="button" class="btn btn-primary" id="lookupBtn" onclick="lookupPhone()" disabled>
+          Continue
+        </button>
+        
+        <p class="privacy-note">
+          <strong>Privacy:</strong> We only use your phone number to manage today's shower reservations. 
+          It is not shared and is automatically deleted after the day ends. 
+          This device may remember your number for today so you don't have to re-enter it.
+        </p>
+      </div>
+      
+      <p class="footer-note">
+        One reservation per phone number per day. 
+        <a href="#" onclick="clearMyInfo(); return false;" class="clear-info-link">Clear my info</a>
+      </p>
+    </div>
+    
+    <!-- Screen 2: Status Display -->
+    <div id="statusScreen" class="screen">
+      <div class="card-title" style="text-align: center; margin-bottom: 1rem; font-size: 1.25rem;">
+        Here's Your Reservation
+      </div>
+      
+      <div class="card" id="statusContent">
+        <!-- Filled dynamically -->
+      </div>
+      
+      <p class="refresh-note">Status updates automatically every 30 seconds.</p>
+    </div>
+    
+    <!-- Screen 3: Booking -->
+    <div id="bookingScreen" class="screen">
+      <div class="date-display">
+        <div class="day" id="bookingDay"></div>
+        <div class="date" id="bookingDate"></div>
+      </div>
+      
+      <div id="bookingError" class="message error" style="display: none;"></div>
+      
+      <div class="card">
+        <div class="card-title">Select a Time</div>
+        <div id="slotsContainer">
+          <div class="loading">
+            <div class="spinner"></div>
+            Loading available times...
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" id="confirmCard" style="display: none;">
+        <p style="margin-bottom: 1rem; color: var(--text-light);">
+          Booking for: <strong id="bookingPhone"></strong>
+        </p>
+        <button type="button" class="btn btn-primary" id="bookBtn" onclick="makeBooking()" disabled>
+          Reserve This Time
+        </button>
+      </div>
+      
+      <p class="footer-note">
+        Slots not claimed within 10 minutes are released automatically.
+      </p>
+    </div>
+    
+    <!-- Screen 4: Booking Confirmation -->
+    <div id="confirmationScreen" class="screen">
+      <div class="card">
+        <div class="checked-in-display">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="currentColor"/>
+            </svg>
+          </div>
+          
+          <h2>You're All Set!</h2>
+          <p style="color: var(--text-light);">Your shower is scheduled for</p>
+          <div class="time-display">
+            <div class="time" id="confirmedTime"></div>
+          </div>
+          
+          <div class="info-box" style="text-align: center; margin-top: 1.5rem;">
+            <h4>What Happens Next?</h4>
+            <p style="color: var(--text); line-height: 1.7; margin-bottom: 0.75rem;"><strong>Please don't wait at the pantry.</strong> Return about 10 minutes before your time — not earlier.</p>
+            <p style="color: var(--text); line-height: 1.7; margin-bottom: 0.75rem;"><strong>Check-in opens 10 minutes before</strong> your scheduled time. Return to this page to tap "Check In."</p>
+            <p style="color: var(--text); line-height: 1.7;"><strong>Your phone number is saved</strong> — just revisit this page and we'll find your reservation automatically.</p>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary" onclick="showStatusFromConfirmation()">
+        View Countdown & Check In
+      </button>
+    </div>
+  </div>
+  
+  <!-- PWA Install Prompt -->
+  <div class="install-prompt" id="installPrompt">
+    <div class="install-prompt-text">
+      <strong>Add to Home Screen</strong>
+      <span>Quick access to book showers anytime</span>
+    </div>
+    <button class="install-prompt-btn" id="installBtn">Install</button>
+    <button class="install-prompt-close" id="installClose">&times;</button>
+  </div>
+  
+  <script>
+    // ============================================
+    // PWA SETUP
+    // ============================================
+    
+    // Production mode - disable verbose logging
+    const DEBUG = false;
+    const log = DEBUG ? console.log.bind(console) : function() {};
+    
+    let deferredPrompt = null;
+    
+    // Set manifest URL dynamically (Google Apps Script URL)
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get the current script URL base
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.split('?')[0];
+      const manifestUrl = baseUrl + '?page=manifest';
+      document.getElementById('manifest-link').href = manifestUrl;
+      
+      // Register Service Worker (skip in development)
+      if (location.protocol === 'https:') {
+        registerServiceWorker();
+      }
+      
+      // Setup install prompt handlers
+      setupInstallPrompt();
+    });
+    
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        // Note: Inline blob service workers have limited scope in Apps Script
+        // The SW provides basic offline caching when possible
+        const swCode = `
+          const CACHE_NAME = 'shower-booking-v2';
+          
+          self.addEventListener('install', (event) => {
+            self.skipWaiting();
+          });
+          
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(
+              caches.keys().then((cacheNames) => {
+                return Promise.all(
+                  cacheNames.filter(name => name !== CACHE_NAME)
+                    .map(name => caches.delete(name))
+                );
+              })
+            );
+            self.clients.claim();
+          });
+          
+          self.addEventListener('fetch', (event) => {
+            event.respondWith(
+              fetch(event.request)
+                .then((response) => {
+                  if (response.status === 200) {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                      cache.put(event.request, responseClone);
+                    });
+                  }
+                  return response;
+                })
+                .catch(() => caches.match(event.request))
+            );
+          });
+        `;
+        
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        
+        navigator.serviceWorker.register(swUrl, { scope: '/' })
+          .then((registration) => {
+            log('Service Worker registered:', registration.scope);
+          })
+          .catch((error) => {
+            log('Service Worker registration skipped:', error.message);
+          });
+      }
+    }
+    
+    function setupInstallPrompt() {
+      const installPrompt = document.getElementById('installPrompt');
+      const installBtn = document.getElementById('installBtn');
+      const installClose = document.getElementById('installClose');
+      
+      // Check if already installed
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        return; // Already installed
+      }
+      
+      // Check if user dismissed before
+      if (localStorage.getItem('pwaInstallDismissed')) {
+        const dismissedTime = parseInt(localStorage.getItem('pwaInstallDismissed'));
+        // Show again after 7 days
+        if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
+          return;
+        }
+      }
+      
+      // Listen for beforeinstallprompt (Android/Desktop Chrome)
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installPrompt.classList.add('show');
+      });
+      
+      // Install button click
+      installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('Install outcome:', outcome);
+          deferredPrompt = null;
+        } else {
+          // iOS - show instructions
+          showIOSInstallInstructions();
+        }
+        installPrompt.classList.remove('show');
+      });
+      
+      // Close button
+      installClose.addEventListener('click', () => {
+        installPrompt.classList.remove('show');
+        localStorage.setItem('pwaInstallDismissed', Date.now().toString());
+      });
+      
+      // Detect iOS Safari
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      
+      if (isIOS && isSafari && !window.navigator.standalone) {
+        // Update button text for iOS
+        installBtn.textContent = 'How to Install';
+        
+        // Show install prompt for iOS after a delay
+        setTimeout(() => {
+          installPrompt.classList.add('show');
+        }, 3000);
+      }
+      
+      // Also detect if NOT Safari on iOS (show different message)
+      if (isIOS && !isSafari) {
+        // User is on iOS but not using Safari
+        installBtn.textContent = 'Open in Safari';
+        installBtn.addEventListener('click', function iosNonSafari(e) {
+          e.stopPropagation();
+          alert('To install this app, please open this page in Safari.\n\nCopy this URL and paste it in Safari to add to your Home Screen.');
+        }, { once: true });
+        
+        setTimeout(() => {
+          installPrompt.classList.add('show');
+        }, 3000);
+      }
+    }
+    
+    function showIOSInstallInstructions() {
+      // Create a modal overlay with visual instructions
+      const overlay = document.createElement('div');
+      overlay.id = 'iosInstallOverlay';
+      overlay.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.85);
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          color: white;
+          text-align: center;
+        ">
+          <div style="max-width: 320px;">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Add to Home Screen</h2>
+            
+            <div style="margin-bottom: 2rem;">
+              <div style="font-size: 3rem; margin-bottom: 0.5rem;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block;">
+                  <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                  <polyline points="16,6 12,2 8,6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <p style="font-size: 1.1rem; opacity: 0.9;">
+                <strong>Step 1:</strong> Tap the <strong>Share</strong> button in Safari's toolbar
+              </p>
+              <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 0.5rem;">
+                (It's at the bottom of your screen - a square with an arrow pointing up)
+              </p>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">➕</div>
+              <p style="font-size: 1.1rem; opacity: 0.9;">
+                <strong>Step 2:</strong> Scroll down and tap <strong>"Add to Home Screen"</strong>
+              </p>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">✓</div>
+              <p style="font-size: 1.1rem; opacity: 0.9;">
+                <strong>Step 3:</strong> Tap <strong>"Add"</strong> in the top right
+              </p>
+            </div>
+            
+            <button onclick="document.getElementById('iosInstallOverlay').remove()" style="
+              padding: 1rem 2rem;
+              background: var(--accent, #e07b53);
+              color: white;
+              border: none;
+              border-radius: 12px;
+              font-size: 1rem;
+              font-weight: 600;
+              cursor: pointer;
+              width: 100%;
+            ">Got it!</button>
+            
+            <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1.5rem;">
+              Not seeing the Share button? Make sure you're using Safari (not Chrome or another browser).
+            </p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    
+    // ============================================
+    // BOOKING APP
+    // ============================================
+    
+    let currentPhone = '';
+    let currentBooking = null;
+    let selectedSlot = null;
+    let refreshInterval = null;
+    let bookingOpen = true;
+    let closedMessage = '';
+    
+    // localStorage helpers
+    function savePhoneToStorage(phone) {
+      try {
+        localStorage.setItem('showerBookingPhone', phone);
+      } catch (e) {
+        console.log('localStorage not available:', e.message);
+      }
+    }
+    
+    function getPhoneFromStorage() {
+      try {
+        return localStorage.getItem('showerBookingPhone');
+      } catch (e) {
+        console.log('localStorage not available:', e.message);
+        return null;
+      }
+    }
+    
+    function clearPhoneFromStorage() {
+      try {
+        localStorage.removeItem('showerBookingPhone');
+      } catch (e) {
+        console.log('localStorage not available:', e.message);
+      }
+    }
+    
+    function clearMyInfo() {
+      clearPhoneFromStorage();
+      currentPhone = '';
+      currentBooking = null;
+      const phoneInput = document.getElementById('phone');
+      if (phoneInput) {
+        phoneInput.value = '';
+      }
+      document.getElementById('lookupBtn').disabled = true;
+      
+      // Show brief confirmation
+      const footerNote = document.querySelector('.footer-note');
+      if (footerNote) {
+        const originalText = footerNote.innerHTML;
+        footerNote.innerHTML = '<span style="color: var(--success);">✓ Your info has been cleared from this device.</span>';
+        setTimeout(() => {
+          footerNote.innerHTML = originalText;
+        }, 3000);
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get saved phone from localStorage
+      const savedPhone = getPhoneFromStorage();
+      
+      // Single combined API call for initial load - much faster than multiple calls
+      google.script.run
+        .withSuccessHandler(handleInitialData)
+        .withFailureHandler(function(err) {
+          console.error('Initial load failed:', err);
+          // Fallback to old behavior
+          showPhoneScreen();
+          loadDateTime();
+        })
+        .apiGetInitialData(savedPhone || '');
+      
+      // Set up event listeners
+      setupEventListeners();
+    });
+    
+    function setupEventListeners() {
+      const phoneInput = document.getElementById('phone');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+          const phone = this.value.replace(/\D/g, '');
+          document.getElementById('lookupBtn').disabled = phone.length < 10;
+        });
+        
+        phoneInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter' && !document.getElementById('lookupBtn').disabled) {
+            lookupPhone();
+          }
+        });
+      }
+      
+      // Closed screen phone input
+      const closedPhoneInput = document.getElementById('closedPhone');
+      if (closedPhoneInput) {
+        closedPhoneInput.addEventListener('input', function() {
+          const phone = this.value.replace(/\D/g, '');
+          document.getElementById('closedLookupBtn').disabled = phone.length < 10;
+        });
+      }
+    }
+    
+    function handleInitialData(data) {
+      log('Initial data received:', data);
+      
+      // Store booking status
+      bookingOpen = data.bookingStatus.open;
+      closedMessage = data.bookingStatus.message || '';
+      
+      // Update date/time display
+      if (data.currentTime) {
+        const dayText = data.currentTime.date.split(', ')[0];
+        const dateText = data.currentTime.date.split(', ').slice(1).join(', ');
+        
+        const elements = {
+          currentDay: document.getElementById('currentDay'),
+          currentDate: document.getElementById('currentDate'),
+          bookingDay: document.getElementById('bookingDay'),
+          bookingDate: document.getElementById('bookingDate'),
+        };
+        
+        if (elements.currentDay) elements.currentDay.textContent = dayText;
+        if (elements.currentDate) elements.currentDate.textContent = dateText;
+        if (elements.bookingDay) elements.bookingDay.textContent = dayText;
+        if (elements.bookingDate) elements.bookingDate.textContent = dateText;
+        
+        dateTimeLoaded = true;
+      }
+      
+      // Handle phone lookup result
+      if (data.phoneLookup) {
+        const result = data.phoneLookup;
+        currentPhone = getPhoneFromStorage() || '';
+        
+        if (result.hasBooking) {
+          currentBooking = result.booking;
+          showStatusScreen();
+        } else if (!bookingOpen) {
+          showClosedScreen();
+        } else {
+          showBookingScreen();
+        }
+      } else if (!bookingOpen) {
+        showClosedScreen();
+      } else {
+        showPhoneScreen();
+      }
+    }
+    
+    function lookupFromClosed() {
+      const phone = document.getElementById('closedPhone').value;
+      currentPhone = phone.replace(/\D/g, '');
+      
+      const btn = document.getElementById('closedLookupBtn');
+      btn.disabled = true;
+      btn.textContent = 'Checking...';
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.textContent = 'Check My Reservation';
+          
+          if (result && result.hasBooking) {
+            // Found a booking - save phone and show status
+            savePhoneToStorage(currentPhone);
+            currentBooking = result.booking;
+            showStatusScreen();
+          } else {
+            // No booking found
+            alert('No reservation found for this phone number today. New bookings are currently unavailable.');
+            document.getElementById('closedPhone').value = '';
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = 'Check My Reservation';
+          alert('Something went wrong. Please try again.');
+        })
+        .apiLookupByPhone(currentPhone);
+    }
+    
+    // Legacy function - kept for manual refresh if needed
+    function checkBookingStatus() {
+      google.script.run
+        .withSuccessHandler(function(status) {
+          bookingOpen = status.open;
+          closedMessage = status.message || '';
+        })
+        .withFailureHandler(function(err) {
+          log('Failed to check booking status:', err);
+        })
+        .apiGetBookingStatus();
+    }
+    
+    function showClosedScreen() {
+      hideAllScreens();
+      document.getElementById('closedScreen').classList.add('active');
+      if (closedMessage) {
+        document.getElementById('closedMessage').textContent = closedMessage;
+      }
+    }
+    
+    function autoLookupPhone(phone) {
+      currentPhone = phone;
+      
+      // Show a loading state
+      const container = document.querySelector('.container');
+      const originalContent = container.innerHTML;
+      container.innerHTML = `
+        <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Checking your reservation...</p>
+          </div>
+        </div>
+      `;
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          container.innerHTML = originalContent;
+          
+          if (!result || !result.found) {
+            // Phone not found or error
+            if (!bookingOpen) {
+              // Booking is closed and no reservation found - show closed screen
+              showClosedScreen();
+            } else {
+              showPhoneScreen();
+            }
+            return;
+          }
+          
+          if (result.hasBooking) {
+            // Show status screen (even if booking is closed - they can still view their reservation)
+            currentBooking = result.booking;
+            showStatusScreen();
+          } else {
+            // No booking
+            if (!bookingOpen) {
+              // Booking is closed - show closed screen
+              showClosedScreen();
+            } else {
+              // Booking is open - show booking screen
+              showBookingScreen();
+            }
+          }
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = originalContent;
+          // On error, fall back based on booking status
+          if (!bookingOpen) {
+            showClosedScreen();
+          } else {
+            showPhoneScreen();
+          }
+        })
+        .apiLookupByPhone(phone);
+    }
+    
+    let dateTimeLoaded = false;
+    
+    function loadDateTime() {
+      // Skip if already loaded from initial data
+      if (dateTimeLoaded) {
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          const dayText = result.date.split(', ')[0];
+          const dateText = result.date.split(', ').slice(1).join(', ');
+          
+          // These elements may not exist if autoLookupPhone replaced the container
+          const currentDay = document.getElementById('currentDay');
+          const currentDate = document.getElementById('currentDate');
+          const bookingDay = document.getElementById('bookingDay');
+          const bookingDate = document.getElementById('bookingDate');
+          
+          if (currentDay) currentDay.textContent = dayText;
+          if (currentDate) currentDate.textContent = dateText;
+          if (bookingDay) bookingDay.textContent = dayText;
+          if (bookingDate) bookingDate.textContent = dateText;
+          
+          dateTimeLoaded = true;
+        })
+        .apiGetCurrentTime();
+    }
+    
+    function lookupPhone() {
+      const phone = document.getElementById('phone').value;
+      currentPhone = phone.replace(/\D/g, '');
+      
+      const btn = document.getElementById('lookupBtn');
+      btn.disabled = true;
+      btn.textContent = 'Checking...';
+      hideError('phoneError');
+      
+      google.script.run
+        .withSuccessHandler(handleLookupResult)
+        .withFailureHandler(function(err) {
+          showError('phoneError', 'Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Continue';
+        })
+        .apiLookupByPhone(currentPhone);
+    }
+    
+    function handleLookupResult(result) {
+      const btn = document.getElementById('lookupBtn');
+      btn.disabled = false;
+      btn.textContent = 'Continue';
+      
+      if (!result || !result.found) {
+        showError('phoneError', result?.error || 'Could not look up phone number.');
+        return;
+      }
+      
+      // Save phone to localStorage for future visits
+      savePhoneToStorage(currentPhone);
+      
+      if (result.hasBooking) {
+        // Show status screen (even if booking is closed - they can view their reservation)
+        currentBooking = result.booking;
+        showStatusScreen();
+      } else {
+        // No booking - check if booking is open
+        if (!bookingOpen) {
+          showClosedScreen();
+        } else {
+          showBookingScreen();
+        }
+      }
+    }
+    
+    function showPhoneScreen(clearStorage = false) {
+      stopRefresh();
+      hideAllScreens();
+      document.getElementById('phoneScreen').classList.add('active');
+      document.getElementById('phone').value = '';
+      document.getElementById('lookupBtn').disabled = true;
+      currentPhone = '';
+      currentBooking = null;
+      selectedSlot = null;
+      loadDateTime(); // Refresh date display
+      
+      if (clearStorage) {
+        clearPhoneFromStorage();
+      }
+    }
+    
+    function showStatusScreen() {
+      hideAllScreens();
+      document.getElementById('statusScreen').classList.add('active');
+      renderStatus();
+      startRefresh();
+    }
+    
+    function showBookingScreen() {
+      hideAllScreens();
+      document.getElementById('bookingScreen').classList.add('active');
+      document.getElementById('bookingPhone').textContent = formatPhone(currentPhone);
+      loadDateTime(); // Refresh date display in case it was cleared
+      loadSlots();
+    }
+    
+    function showConfirmationScreen(booking) {
+      hideAllScreens();
+      document.getElementById('confirmationScreen').classList.add('active');
+      document.getElementById('confirmedTime').textContent = booking.displayTime;
+      currentBooking = booking;
+    }
+    
+    function showStatusFromConfirmation() {
+      // Refresh the booking data then show status
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result && result.hasBooking) {
+            currentBooking = result.booking;
+          }
+          showStatusScreen();
+        })
+        .withFailureHandler(function() {
+          showStatusScreen();
+        })
+        .apiLookupByPhone(currentPhone);
+    }
+    
+    function hideAllScreens() {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    }
+    
+    function startRefresh() {
+      stopRefresh();
+      refreshInterval = setInterval(refreshStatus, 30000);
+    }
+    
+    function stopRefresh() {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+    }
+    
+    function refreshStatus() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result && result.hasBooking) {
+            currentBooking = result.booking;
+            renderStatus();
+          }
+        })
+        .apiLookupByPhone(currentPhone);
+    }
+    
+    function renderStatus() {
+      const container = document.getElementById('statusContent');
+      const b = currentBooking;
+      
+      if (!b) {
+        container.innerHTML = '<p>No booking found.</p>';
+        return;
+      }
+      
+      // Handle expired or cancelled bookings
+      if (b.status === 'expired' || b.status === 'cancelled') {
+        const isExpired = b.status === 'expired';
+        container.innerHTML = `
+          <div class="checked-in-display">
+            <div class="icon" style="background: var(--error);">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h2 style="color: var(--error);">${isExpired ? 'Reservation Expired' : 'Reservation Cancelled'}</h2>
+            <p style="font-size: 1rem; margin-bottom: 1.5rem;">
+              ${isExpired 
+                ? 'Your reserved time slot was not claimed within the grace period and has been released.' 
+                : 'This reservation has been cancelled.'}
+            </p>
+            
+            <div class="info-box" style="text-align: left; margin-bottom: 1.5rem;">
+              <h4>What now?</h4>
+              <p style="color: var(--text); line-height: 1.7; margin-bottom: 0.5rem;">If you're at the pantry, please speak with staff for assistance.</p>
+              <p style="color: var(--text); line-height: 1.7;">You may also book a new time if slots are still available today.</p>
+            </div>
+            
+            <button class="btn btn-primary" onclick="bookNewTimeAfterExpired()">
+              Book a New Time
+            </button>
+          </div>
+        `;
+        return;
+      }
+      
+      if (b.status === 'checked_in') {
+        const minutesUntil = b.minutesUntil;
+        
+        // Check if the reservation time has significantly passed (more than 30 min after slot)
+        // This likely means they've already completed or the day is over
+        if (minutesUntil < -30) {
+          container.innerHTML = `
+            <div class="checked-in-display">
+              <div class="icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M5 13l4 4L19 7" stroke="currentColor"/>
+                </svg>
+              </div>
+              <h2>You've Already Checked In</h2>
+              
+              <div class="info-box" style="margin-top: 1.5rem;">
+                <h4>Need another shower?</h4>
+                <p>You may book only one shower per day while we are open. Monday–Friday, 10am to 2pm.</p>
+              </div>
+            </div>
+          `;
+        } else {
+          // Still within reasonable window - show active check-in status
+          container.innerHTML = `
+            <div class="checked-in-display">
+              <div class="icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M5 13l4 4L19 7" stroke="currentColor"/>
+                </svg>
+              </div>
+              <h2>You're Checked In!</h2>
+              <p style="font-size: 1.1rem;">Please wait nearby — staff will call you soon.</p>
+              
+              <div class="info-box" style="margin-top: 1.5rem; text-align: left;">
+                <h4>What happens next?</h4>
+                <p style="color: var(--text); line-height: 1.7; margin-bottom: 0.5rem;">Stay within earshot of the staff area</p>
+                <p style="color: var(--text); line-height: 1.7; margin-bottom: 0.5rem;">When a shower becomes available, staff will call you</p>
+                <p style="color: var(--text); line-height: 1.7;">Please be ready to go when called</p>
+              </div>
+            </div>
+          `;
+        }
+        return;
+      }
+      
+      // Booked status
+      const minutesUntil = b.minutesUntil;
+      let countdownClass = '';
+      let countdownText = '';
+      let countdownLabel = 'Starts in';
+      
+      if (minutesUntil > 60) {
+        const hours = Math.floor(minutesUntil / 60);
+        const mins = minutesUntil % 60;
+        countdownText = `${hours}h ${mins}m`;
+      } else if (minutesUntil > 0) {
+        countdownText = `${minutesUntil} minutes`;
+        if (minutesUntil <= 10) countdownClass = 'urgent';
+      } else {
+        countdownText = `${Math.abs(minutesUntil)} min ago`;
+        countdownLabel = 'Started';
+        countdownClass = 'past';
+      }
+      
+      // Calculate when check-in opens
+      const checkInOpensIn = minutesUntil - 10;
+      let checkInTimingHtml = '';
+      if (checkInOpensIn > 0) {
+        let checkInText = '';
+        if (checkInOpensIn > 60) {
+          const hours = Math.floor(checkInOpensIn / 60);
+          const mins = checkInOpensIn % 60;
+          checkInText = `${hours}h ${mins}m`;
+        } else {
+          checkInText = `${checkInOpensIn} min`;
+        }
+        checkInTimingHtml = `
+          <div style="margin-top: 0.75rem; font-size: 0.9rem; opacity: 0.9;">
+            Check-in opens in <strong>${checkInText}</strong>
+          </div>
+        `;
+      } else if (minutesUntil > -10 && minutesUntil <= 10) {
+        checkInTimingHtml = `
+          <div style="margin-top: 0.75rem; font-size: 0.9rem; opacity: 0.9;">
+            ✓ Check-in window is <strong>OPEN</strong>
+          </div>
+        `;
+      }
+      
+      let actionHtml = '';
+      if (b.canCheckIn) {
+        actionHtml = `
+          <button class="btn btn-success" onclick="doCheckIn()">
+            ✓ I'm Here — Check In Now
+          </button>
+          <div class="info-box">
+            <h4>You're in the check-in window!</h4>
+            <p>Tap the button above when you arrive at the pantry.</p>
+          </div>
+        `;
+      } else if (minutesUntil > 10) {
+        actionHtml = `
+          <button class="btn btn-success" disabled>
+            Check-In Opens in ${minutesUntil - 10} min
+          </button>
+          <div class="info-box">
+            <h4>Please don't wait at the pantry</h4>
+            <p>Return about 10 minutes before your scheduled time — not earlier. Check-in opens 10 minutes before your slot.</p>
+          </div>
+        `;
+      } else {
+        // Grace period has passed - cannot check in
+        actionHtml = `
+          <div class="message warning" style="text-align: center; padding: 1.25rem;">
+            <strong style="display: block; margin-bottom: 0.5rem;">Check-In Window Closed</strong>
+            Your reservation time has passed. Please speak with the staff. Late arrivals may not be accommodated.
+          </div>
+          <button class="btn btn-primary" onclick="rebookNewTime()">
+            Book a Different Time
+          </button>
+        `;
+      }
+      
+      container.innerHTML = `
+        <div class="status-header">
+          <span class="status-badge booked">Reserved</span>
+          
+          <div class="time-display">
+            <div class="label">Your Shower Time</div>
+            <div class="time">${b.displayTime}</div>
+          </div>
+          
+          <div class="countdown ${countdownClass}">
+            <div class="label">${countdownLabel}</div>
+            <div class="value">${countdownText}</div>
+            ${checkInTimingHtml}
+          </div>
+        </div>
+        ${actionHtml}
+      `;
+    }
+    
+    function rebookNewTime() {
+      // Cancel the expired booking and show available slots
+      const btn = document.querySelector('.btn-primary');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Loading...';
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            currentBooking = null;
+            showBookingScreen();
+          } else {
+            alert(result.error || 'Could not cancel old booking. Please try again.');
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = 'Book a Different Time';
+            }
+          }
+        })
+        .withFailureHandler(function() {
+          alert('Something went wrong. Please try again.');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Book a Different Time';
+          }
+        })
+        .apiCancelExpiredBooking(currentBooking.code);
+    }
+    
+    function bookNewTimeAfterExpired() {
+      // For already-expired bookings, just clear and show booking screen
+      // The slot is already marked expired, so no need to call the API
+      currentBooking = null;
+      showBookingScreen();
+    }
+    
+    function doCheckIn() {
+      const btn = document.querySelector('.btn-success');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Checking in...';
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            refreshStatus();
+          } else {
+            alert(result.error || 'Could not check in. Please try again.');
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = '✓ I\'m Here — Check In Now';
+            }
+          }
+        })
+        .withFailureHandler(function() {
+          alert('Something went wrong. Please try again.');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '✓ I\'m Here — Check In Now';
+          }
+        })
+        .apiCheckIn(currentBooking.code);
+    }
+    
+    function loadSlots() {
+      google.script.run
+        .withSuccessHandler(renderSlots)
+        .withFailureHandler(function() {
+          document.getElementById('slotsContainer').innerHTML = 
+            '<div class="message error">Could not load available times. Please try again.</div>';
+        })
+        .apiGetAvailableSlots();
+    }
+    
+    function renderSlots(slots) {
+      const container = document.getElementById('slotsContainer');
+      
+      if (!slots || slots.length === 0) {
+        container.innerHTML = `
+          <div class="no-slots">
+            <h3>No Slots Available</h3>
+            <p>All shower times for today are booked or have passed. Please try again tomorrow.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '<div class="time-grid">';
+      slots.forEach(function(slot) {
+        html += `
+          <div class="time-slot" data-time="${slot.time}" onclick="selectSlot(this, '${slot.time}')">
+            <div class="time">${slot.display}</div>
+            <div class="spots">${slot.remaining} available</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      
+      container.innerHTML = html;
+      document.getElementById('confirmCard').style.display = 'none';
+    }
+    
+    function selectSlot(element, time) {
+      document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedSlot = time;
+      
+      document.getElementById('confirmCard').style.display = 'block';
+      document.getElementById('bookBtn').disabled = false;
+    }
+    
+    function makeBooking() {
+      if (!selectedSlot || !currentPhone) return;
+      
+      const btn = document.getElementById('bookBtn');
+      btn.disabled = true;
+      btn.textContent = 'Reserving...';
+      hideError('bookingError');
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showConfirmationScreen({
+              displayTime: result.displayTime,
+              code: result.code,
+              status: 'booked',
+              minutesUntil: 60, // placeholder
+              canCheckIn: false
+            });
+          } else {
+            showError('bookingError', result.error || 'Could not complete booking.');
+            btn.disabled = false;
+            btn.textContent = 'Reserve This Time';
+          }
+        })
+        .withFailureHandler(function() {
+          showError('bookingError', 'Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Reserve This Time';
+        })
+        .apiBookSlot(selectedSlot, currentPhone);
+    }
+    
+    function formatPhone(phone) {
+      if (phone.length === 10) {
+        return `(${phone.slice(0,3)}) ${phone.slice(3,6)}-${phone.slice(6)}`;
+      }
+      return phone;
+    }
+    
+    function showError(id, message) {
+      const el = document.getElementById(id);
+      el.textContent = message;
+      el.style.display = 'block';
+    }
+    
+    function hideError(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+  </script>
+</body>
+</html>

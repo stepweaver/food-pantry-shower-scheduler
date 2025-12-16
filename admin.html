@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>Staff Dashboard (Demo)</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#1a3a3a">
+  <meta name="description" content="Staff dashboard for Mishawaka Food Pantry shower booking">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Staff">
+  <meta name="application-name" content="Staff Dashboard">
+  <meta name="msapplication-TileColor" content="#1a3a3a">
+  <meta name="msapplication-tap-highlight" content="no">
+  
+  <!-- iOS Icon -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180' width='180' height='180'%3E%3Crect width='180' height='180' rx='27' fill='%231a3a3a'/%3E%3Cg transform='translate(36, 27) scale(1.8)'%3E%3Crect x='20' y='5' width='20' height='6' rx='2' fill='%23e07b53'/%3E%3Crect x='25' y='11' width='10' height='4' rx='1' fill='%23e07b53'/%3E%3Cellipse cx='22' cy='28' rx='3' ry='5' fill='%23fff' opacity='0.9'/%3E%3Cellipse cx='30' cy='32' rx='3' ry='5' fill='%23fff' opacity='0.9'/%3E%3Cellipse cx='38' cy='28' rx='3' ry='5' fill='%23fff' opacity='0.9'/%3E%3Cellipse cx='26' cy='42' rx='3' ry='5' fill='%23fff' opacity='0.8'/%3E%3Cellipse cx='34' cy='46' rx='3' ry='5' fill='%23fff' opacity='0.8'/%3E%3Cellipse cx='30' cy='58' rx='3' ry='5' fill='%23fff' opacity='0.7'/%3E%3C/g%3E%3C/svg%3E">
+  
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a3a3a;
+      --primary-light: #2d5a5a;
+      --accent: #e07b53;
+      --accent-hover: #c96a45;
+      --bg: #f5f3f0;
+      --card-bg: #ffffff;
+      --text: #1a1a1a;
+      --text-light: #666666;
+      --success: #2d8a5f;
+      --warning: #c4912f;
+      --error: #c94444;
+      --border: #e0dcd7;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .header .time {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+    }
+    
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .stat-card.success .value { color: var(--success); }
+    .stat-card.warning .value { color: var(--warning); }
+    .stat-card.accent .value { color: var(--accent); }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .booking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .booking-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .booking-card .time-col {
+      text-align: center;
+      min-width: 70px;
+    }
+    
+    .booking-card .time-col .time {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .booking-card .info-col {
+      flex: 1;
+    }
+    
+    .booking-card .code {
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.1em;
+    }
+    
+    .booking-card .phone {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    
+    .booking-card .status-badge {
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .status-badge.booked {
+      background: rgba(224, 123, 83, 0.15);
+      color: var(--accent);
+    }
+    
+    .status-badge.checked_in {
+      background: rgba(45, 138, 95, 0.15);
+      color: var(--success);
+    }
+    
+    .status-badge.completed {
+      background: rgba(45, 138, 95, 0.3);
+      color: var(--success);
+    }
+    
+    .status-badge.expired {
+      background: rgba(201, 68, 68, 0.15);
+      color: var(--error);
+    }
+    
+    .status-badge.cancelled {
+      background: rgba(102, 102, 102, 0.15);
+      color: var(--text-light);
+    }
+    
+    .booking-card .actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .action-btn {
+      padding: 0.5rem 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .action-btn.checkin {
+      background: var(--success);
+      color: white;
+    }
+    
+    .action-btn.complete {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .action-btn.noshow {
+      background: var(--warning);
+      color: white;
+    }
+    
+    .action-btn.cancel {
+      background: var(--error);
+      color: white;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-light);
+    }
+    
+    .empty-state h3 {
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-light);
+    }
+    
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .refresh-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .refresh-bar .last-updated {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    
+    .refresh-bar button {
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.75rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 200;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    .toast.error {
+      background: var(--error);
+    }
+    
+    .toast.success {
+      background: var(--success);
+    }
+    
+    .booking-toggle {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .booking-toggle .toggle-info {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .booking-toggle .toggle-label {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .booking-toggle .toggle-status {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    
+    .booking-toggle .toggle-status.open {
+      color: var(--success);
+    }
+    
+    .booking-toggle .toggle-status.closed {
+      color: var(--error);
+    }
+    
+    .toggle-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    
+    .toggle-btn {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .toggle-btn.open-btn {
+      background: var(--success);
+      color: white;
+    }
+    
+    .toggle-btn.close-btn {
+      background: var(--error);
+      color: white;
+    }
+    
+    .toggle-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .toggle-btn.active {
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.15);
+    }
+    
+    .message-input {
+      width: 100%;
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .message-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .message-input.visible {
+      display: block;
+    }
+    
+    @media (max-width: 600px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .booking-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .booking-card .time-col {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0.5rem;
+      }
+      
+      .booking-card .actions {
+        width: 100%;
+        margin-top: 0.75rem;
+      }
+      
+      .action-btn {
+        flex: 1;
+      }
+      
+      .booking-toggle {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .toggle-controls {
+        justify-content: stretch;
+      }
+      
+      .toggle-btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Staff Dashboard (Demo)</h1>
+    <div class="time" id="currentTime">--:-- --</div>
+  </div>
+  
+  <div class="container">
+    <div class="stats-row" id="stats">
+      <div class="stat-card">
+        <div class="value" id="statTotal">-</div>
+        <div class="label">Total</div>
+      </div>
+      <div class="stat-card accent">
+        <div class="value" id="statBooked">-</div>
+        <div class="label">Waiting</div>
+      </div>
+      <div class="stat-card success">
+        <div class="value" id="statCheckedIn">-</div>
+        <div class="label">Checked In</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statCompleted">-</div>
+        <div class="label">Done</div>
+      </div>
+    </div>
+    
+    <div class="booking-toggle" id="bookingToggle">
+      <div class="toggle-info">
+        <div class="toggle-label">Booking Status</div>
+        <div class="toggle-status" id="toggleStatus">Loading...</div>
+      </div>
+      <div class="toggle-controls">
+        <button class="toggle-btn open-btn" id="openBtn" onclick="setBookingOpen(true)">Open Booking</button>
+        <button class="toggle-btn close-btn" id="closeBtn" onclick="showCloseOptions()">Close Booking</button>
+      </div>
+      <input type="text" class="message-input" id="closeMessage" placeholder="Custom message (optional) — e.g., 'Closed for maintenance today'">
+      <div id="closeConfirm" style="display: none; width: 100%; margin-top: 0.5rem;">
+        <button class="toggle-btn close-btn" style="width: 100%;" onclick="setBookingOpen(false)">Confirm Close Booking</button>
+      </div>
+    </div>
+    
+    <div class="refresh-bar">
+      <span class="last-updated" id="lastUpdated">Loading...</span>
+      <button onclick="loadBookings()">↻ Refresh</button>
+    </div>
+    
+    <h2 class="section-title">Today's Bookings</h2>
+    
+    <div id="bookingsList">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading bookings...</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  
+  <script>
+    const adminKey = '<?= adminKey ?>';
+    let refreshInterval;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      // Single combined API call for faster initial load
+      google.script.run
+        .withSuccessHandler(handleInitialData)
+        .withFailureHandler(function(err) {
+          console.error('Initial load failed:', err);
+          // Fallback to separate calls
+          loadBookings();
+          loadBookingStatus();
+        })
+        .apiGetAdminInitialData(adminKey);
+      
+      updateClock();
+      
+      // Refresh every 30 seconds
+      refreshInterval = setInterval(loadBookings, 30000);
+      setInterval(updateClock, 1000);
+    });
+    
+    function handleInitialData(data) {
+      if (data.error) {
+        showToast(data.error, 'error');
+        return;
+      }
+      
+      renderBookings(data.bookings);
+      renderBookingStatus(data.bookingStatus);
+    }
+    
+    function loadBookingStatus() {
+      google.script.run
+        .withSuccessHandler(renderBookingStatus)
+        .withFailureHandler(function(err) {
+          document.getElementById('toggleStatus').textContent = 'Error loading status';
+        })
+        .apiGetBookingStatus();
+    }
+    
+    function renderBookingStatus(status) {
+      const statusEl = document.getElementById('toggleStatus');
+      const openBtn = document.getElementById('openBtn');
+      const closeBtn = document.getElementById('closeBtn');
+      
+      if (status.open) {
+        statusEl.textContent = 'Booking is OPEN';
+        statusEl.className = 'toggle-status open';
+        openBtn.classList.add('active');
+        openBtn.disabled = true;
+        closeBtn.classList.remove('active');
+        closeBtn.disabled = false;
+      } else {
+        let statusText = 'Booking is CLOSED';
+        if (status.reason === 'weekend') {
+          statusText = 'Closed (Weekend)';
+        } else if (status.message) {
+          statusText = 'Closed: ' + status.message.substring(0, 50) + (status.message.length > 50 ? '...' : '');
+        }
+        statusEl.textContent = statusText;
+        statusEl.className = 'toggle-status closed';
+        closeBtn.classList.add('active');
+        closeBtn.disabled = true;
+        openBtn.classList.remove('active');
+        openBtn.disabled = status.reason === 'weekend'; // Can't override weekend
+      }
+      
+      // Hide close options
+      document.getElementById('closeMessage').classList.remove('visible');
+      document.getElementById('closeConfirm').style.display = 'none';
+    }
+    
+    function showCloseOptions() {
+      document.getElementById('closeMessage').classList.add('visible');
+      document.getElementById('closeConfirm').style.display = 'block';
+      document.getElementById('closeMessage').focus();
+    }
+    
+    function setBookingOpen(isOpen) {
+      const message = document.getElementById('closeMessage').value;
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showToast(isOpen ? 'Booking opened' : 'Booking closed', 'success');
+            loadBookingStatus();
+            document.getElementById('closeMessage').value = '';
+          } else {
+            showToast(result.error || 'Failed to update', 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Failed to update booking status', 'error');
+        })
+        .apiSetBookingStatus(adminKey, isOpen, message);
+    }
+    
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('currentTime').textContent = 
+        now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+    
+    function loadBookings() {
+      google.script.run
+        .withSuccessHandler(renderBookings)
+        .withFailureHandler(handleError)
+        .apiGetTodayBookings(adminKey);
+    }
+    
+    function renderBookings(bookings) {
+      if (bookings.error) {
+        showToast(bookings.error, 'error');
+        return;
+      }
+      
+      // Update stats
+      const stats = {
+        total: bookings.length,
+        booked: bookings.filter(b => b.status === 'booked').length,
+        checkedIn: bookings.filter(b => b.status === 'checked_in').length,
+        completed: bookings.filter(b => b.status === 'completed').length
+      };
+      
+      document.getElementById('statTotal').textContent = stats.total;
+      document.getElementById('statBooked').textContent = stats.booked;
+      document.getElementById('statCheckedIn').textContent = stats.checkedIn;
+      document.getElementById('statCompleted').textContent = stats.completed;
+      
+      // Update last updated time
+      document.getElementById('lastUpdated').textContent = 
+        'Updated: ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      
+      // Render booking list
+      const container = document.getElementById('bookingsList');
+      
+      if (bookings.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>No Bookings Yet</h3>
+            <p>Bookings will appear here as people reserve shower times.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Filter to show active bookings first
+      const activeStatuses = ['booked', 'checked_in'];
+      const active = bookings.filter(b => activeStatuses.includes(b.status));
+      const completed = bookings.filter(b => !activeStatuses.includes(b.status));
+      
+      let html = '<div class="booking-list">';
+      
+      // Active bookings
+      for (const booking of active) {
+        html += renderBookingCard(booking);
+      }
+      
+      // Completed/expired (collapsed or shown differently)
+      if (completed.length > 0) {
+        html += `<h3 class="section-title" style="margin-top: 1.5rem;">Completed / Expired</h3>`;
+        for (const booking of completed) {
+          html += renderBookingCard(booking);
+        }
+      }
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+    
+    function renderBookingCard(booking) {
+      const statusLabels = {
+        booked: 'Waiting',
+        checked_in: 'Checked In',
+        completed: 'Completed',
+        expired: 'No Show',
+        cancelled: 'Cancelled'
+      };
+      
+      let actions = '';
+      
+      switch (booking.status) {
+        case 'booked':
+          actions = `
+            <button class="action-btn checkin" onclick="doAction('${booking.code}', 'checkin')">Check In</button>
+            <button class="action-btn noshow" onclick="doAction('${booking.code}', 'noshow')">No Show</button>
+          `;
+          break;
+        case 'checked_in':
+          actions = `
+            <button class="action-btn complete" onclick="doAction('${booking.code}', 'complete')">Complete</button>
+            <button class="action-btn cancel" onclick="doAction('${booking.code}', 'cancel')">Cancel</button>
+          `;
+          break;
+      }
+      
+      return `
+        <div class="booking-card">
+          <div class="time-col">
+            <div class="time">${booking.displayTime}</div>
+            <span class="status-badge ${booking.status}">${statusLabels[booking.status] || booking.status}</span>
+          </div>
+          <div class="info-col">
+            <div class="code">${booking.code}</div>
+            <div class="phone">${booking.phone}</div>
+          </div>
+          <div class="actions">
+            ${actions}
+          </div>
+        </div>
+      `;
+    }
+    
+    function doAction(code, action) {
+      const confirmMessages = {
+        checkin: 'Mark as checked in?',
+        complete: 'Mark as completed?',
+        noshow: 'Mark as no-show?',
+        cancel: 'Cancel this booking?'
+      };
+      
+      if (!confirm(confirmMessages[action] || 'Are you sure?')) {
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showToast(result.message, 'success');
+            loadBookings();
+          } else {
+            showToast(result.error || 'Action failed', 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Something went wrong', 'error');
+        })
+        .apiAdminAction(code, action, adminKey);
+    }
+    
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show ' + (type || '');
+      
+      setTimeout(function() {
+        toast.className = 'toast';
+      }, 3000);
+    }
+    
+    function handleError(error) {
+      console.error(error);
+      showToast('Failed to load bookings', 'error');
+    }
+  </script>
+</body>
+</html>
+
