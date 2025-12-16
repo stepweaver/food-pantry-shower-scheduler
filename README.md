@@ -17,10 +17,9 @@ A self-service shower booking system built with Google Apps Script. Solves the "
    - A1: `date`
    - B1: `time`
    - C1: `phone`
-   - D1: `code`
-   - E1: `status`
-   - F1: `booked_at`
-   - G1: `checked_in_at`
+   - D1: `status`
+   - E1: `booked_at`
+   - F1: `checked_in_at`
 
 5. Create a second sheet tab named: `Config`
 6. Add these settings:
@@ -57,7 +56,7 @@ A self-service shower booking system built with Google Apps Script. Solves the "
 1. In Apps Script, click **Deploy > New deployment**
 2. Click the gear icon next to "Select type" and choose **Web app**
 3. Set:
-   - Description: `Shower Booking v1`
+   - Description: `Shower Booking v1.2`
    - Execute as: `Me`
    - Who has access: `Anyone`
 4. Click **Deploy**
@@ -103,7 +102,7 @@ Add a link or button to your Apps Script Web App URL. For example:
 - **No waiting around** - Users leave and come back at their scheduled time
 - **Phone number remembered** - Browser localStorage saves their number, no re-entry needed
 - **One booking per phone/day** - Prevents slot hoarding
-- **Auto-expiration** - Unclaimed slots released after 10-minute grace period
+- **Auto-expiration** - Unclaimed slots expire after grace period
 - **Mobile-first PWA** - Installable on phones for quick access
 - **Privacy-focused** - Phone numbers deleted nightly
 - **No staff hardware** - Users use their own phones to book and check in
@@ -111,6 +110,8 @@ Add a link or button to your Apps Script Web App URL. For example:
 - **Performance optimized** - Server-side caching & combined API calls for faster loading
 - **Rate limiting** - Prevents booking abuse
 - **Race condition protection** - LockService prevents double-bookings
+- **Input validation** - Comprehensive server-side validation for security
+- **Batch operations** - Optimized spreadsheet updates for better performance
 
 ## How It Works
 
@@ -119,7 +120,7 @@ Add a link or button to your Apps Script Web App URL. For example:
 1. **Visit the booking page** - Opens on pantry website or direct link
 2. **Enter phone number** - Saved in browser for future visits
 3. **Pick a time slot** - Shows available 30-minute windows
-4. **See confirmation** - Unique 6-character check-in code displayed
+4. **See confirmation** - Booking confirmed with your scheduled time
 5. **Leave** - User doesn't need to wait at the pantry!
 6. **Return within 10 minutes** of their slot
 7. **Revisit the page** - Phone number auto-detected, shows status
@@ -145,6 +146,12 @@ Google Apps Script has inherent latency (~1-3 seconds for cold starts). This ver
 - First page load: 2-4 seconds (cold start)
 - Subsequent actions: 1-2 seconds (cached)
 - Status refresh: <1 second (usually cached)
+
+**Version 1.2 improvements:**
+- Enhanced input validation and error handling
+- Optimized auto-expiration process
+- Better parameter validation for all API endpoints
+- Improved code clarity and maintainability
 
 ### If It Feels Slow
 
@@ -199,7 +206,7 @@ Features:
 
 ### Changes to Config not working
 - Wait 5 minutes for cache to expire, OR
-- Run `clearAllCaches()` from Script Editor
+- Run `clearAllCaches()` from Script Editor (Extensions > Apps Script > Run function > clearAllCaches)
 
 ### Need to reset everything
 - Run `clearAllCaches()` from Script Editor
@@ -217,12 +224,21 @@ This app is designed for low-stakes community use. A few best practices:
 The app includes:
 - Rate limiting to prevent booking abuse
 - Constant-time comparison for admin authentication (prevents timing attacks)
-- Server-side validation of all inputs
+- Comprehensive server-side validation of all inputs
 - LockService to prevent race conditions
+- Input sanitization for phone numbers
+- Error handling for malformed requests
+- Batch operations for better performance
 
 ## Support
 
 For questions, contact the developer or refer to [Google Apps Script documentation](https://developers.google.com/apps-script).
+
+## Version History
+
+- **v1.2.0** (Current) - Enhanced validation, optimized operations, improved error handling
+- **v1.1.0** - Production optimized version with caching and rate limiting
+- **v1.0.0** - Initial release
 
 ---
 

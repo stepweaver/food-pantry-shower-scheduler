@@ -147,16 +147,10 @@
       flex: 1;
     }
     
-    .booking-card .code {
-      font-size: 1.1rem;
-      font-weight: 600;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 0.1em;
-    }
-    
     .booking-card .phone {
-      font-size: 0.85rem;
-      color: var(--text-light);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
     }
     
     .booking-card .status-badge {
@@ -175,11 +169,6 @@
     
     .status-badge.checked_in {
       background: rgba(45, 138, 95, 0.15);
-      color: var(--success);
-    }
-    
-    .status-badge.completed {
-      background: rgba(45, 138, 95, 0.3);
       color: var(--success);
     }
     
@@ -414,6 +403,133 @@
       display: block;
     }
     
+    /* Settings Section */
+    .settings-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+    
+    .settings-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin: 0;
+    }
+    
+    .settings-toggle-icon {
+      color: var(--text-light);
+      font-size: 1.25rem;
+      transition: transform 0.2s;
+    }
+    
+    .settings-toggle-icon.expanded {
+      transform: rotate(180deg);
+    }
+    
+    .settings-content {
+      display: none;
+    }
+    
+    .settings-content.visible {
+      display: block;
+    }
+    
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .setting-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    
+    .setting-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .setting-hint {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      margin-top: -0.1rem;
+    }
+    
+    .setting-input {
+      padding: 0.6rem 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+    
+    .setting-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .setting-input[type="time"] {
+      cursor: pointer;
+    }
+    
+    .settings-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    .settings-btn {
+      padding: 0.6rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .settings-btn.save {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .settings-btn.save:hover {
+      background: var(--primary-light);
+    }
+    
+    .settings-btn.save:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .settings-btn.reset {
+      background: transparent;
+      color: var(--text-light);
+      border: 1px solid var(--border);
+    }
+    
+    .settings-btn.reset:hover {
+      border-color: var(--text-light);
+    }
+    
     @media (max-width: 600px) {
       .stats-row {
         grid-template-columns: repeat(2, 1fr);
@@ -455,6 +571,18 @@
       .toggle-btn {
         flex: 1;
       }
+      
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .settings-actions {
+        flex-direction: column;
+      }
+      
+      .settings-btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -478,10 +606,6 @@
         <div class="value" id="statCheckedIn">-</div>
         <div class="label">Checked In</div>
       </div>
-      <div class="stat-card">
-        <div class="value" id="statCompleted">-</div>
-        <div class="label">Done</div>
-      </div>
     </div>
     
     <div class="booking-toggle" id="bookingToggle">
@@ -496,6 +620,41 @@
       <input type="text" class="message-input" id="closeMessage" placeholder="Custom message (optional) — e.g., 'Closed for maintenance today'">
       <div id="closeConfirm" style="display: none; width: 100%; margin-top: 0.5rem;">
         <button class="toggle-btn close-btn" style="width: 100%;" onclick="setBookingOpen(false)">Confirm Close Booking</button>
+      </div>
+    </div>
+    
+    <div class="settings-card" id="settingsCard">
+      <div class="settings-header" onclick="toggleSettings()">
+        <h3>⚙️ Settings</h3>
+        <span class="settings-toggle-icon" id="settingsIcon">▼</span>
+      </div>
+      <div class="settings-content" id="settingsContent">
+        <div class="settings-grid">
+          <div class="setting-group">
+            <label class="setting-label">Shower Duration</label>
+            <span class="setting-hint">Minutes per appointment</span>
+            <input type="number" class="setting-input" id="settingDuration" min="10" max="120" step="5">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Late Check-in Window</label>
+            <span class="setting-hint">Minutes after slot to allow check-in</span>
+            <input type="number" class="setting-input" id="settingGrace" min="0" max="60" step="5">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Opening Time</label>
+            <span class="setting-hint">First available shower</span>
+            <input type="time" class="setting-input" id="settingStart">
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Closing Time</label>
+            <span class="setting-hint">Last shower ends by</span>
+            <input type="time" class="setting-input" id="settingEnd">
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button class="settings-btn save" id="saveSettingsBtn" onclick="saveSettings()">Save Changes</button>
+          <button class="settings-btn reset" onclick="resetSettings()">Reset</button>
+        </div>
       </div>
     </div>
     
@@ -519,13 +678,26 @@
   <script>
     const adminKey = '<?= adminKey ?>';
     let refreshInterval;
+    let originalSettings = {};
     
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('Admin page loaded, adminKey:', adminKey ? 'present' : 'MISSING');
+      
+      if (!adminKey) {
+        console.error('Admin key is missing! Page may not work correctly.');
+        document.body.innerHTML = '<div style="padding: 2rem; text-align: center;"><h1>Error</h1><p>Admin key is missing. Please access this page with a valid key parameter.</p></div>';
+        return;
+      }
+      
       // Single combined API call for faster initial load
       google.script.run
-        .withSuccessHandler(handleInitialData)
+        .withSuccessHandler(function(data) {
+          console.log('Initial data received:', data ? 'data present' : 'null/undefined', data);
+          handleInitialData(data);
+        })
         .withFailureHandler(function(err) {
-          console.error('Initial load failed:', err);
+          console.error('Initial load failed:', err, typeof err, err ? err.toString() : 'null error');
+          showToast('Failed to load data. Retrying...', 'error');
           // Fallback to separate calls
           loadBookings();
           loadBookingStatus();
@@ -537,28 +709,202 @@
       // Refresh every 30 seconds
       refreshInterval = setInterval(loadBookings, 30000);
       setInterval(updateClock, 1000);
+      
+      // Listen for settings changes
+      document.querySelectorAll('.setting-input').forEach(input => {
+        input.addEventListener('input', checkSettingsChanged);
+      });
     });
     
     function handleInitialData(data) {
-      if (data.error) {
-        showToast(data.error, 'error');
+      // Handle null/undefined response
+      if (!data) {
+        console.error('handleInitialData received null/undefined data');
+        showToast('Failed to load data. Retrying...', 'error');
+        // Fallback to separate calls
+        loadBookings();
+        loadBookingStatus();
+        loadSettings();
         return;
       }
       
-      renderBookings(data.bookings);
-      renderBookingStatus(data.bookingStatus);
+      if (data.error) {
+        showToast(data.error, 'error');
+        // Still try to load bookings, status, and settings separately
+        loadBookings();
+        loadBookingStatus();
+        loadSettings();
+        return;
+      }
+      
+      // Safely render bookings (handle null/undefined)
+      if (data.bookings) {
+        renderBookings(data.bookings);
+      } else {
+        console.warn('No bookings data received');
+        renderBookings([]);
+      }
+      
+      // Safely render booking status
+      if (data.bookingStatus && !data.bookingStatus.error) {
+        renderBookingStatus(data.bookingStatus);
+      } else {
+        if (data.bookingStatus && data.bookingStatus.error) {
+          console.error('Booking status error:', data.bookingStatus.error);
+        } else {
+          console.warn('No booking status data received');
+        }
+        loadBookingStatus(); // Fallback to separate call
+      }
+      
+      if (data.settings) {
+        renderSettings(data.settings);
+      } else {
+        console.warn('No settings data received, loading separately');
+        loadSettings(); // Fallback to separate call
+      }
+    }
+    
+    function loadSettings() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result && result.success && result.settings) {
+            renderSettings(result.settings);
+          } else {
+            console.error('loadSettings received error:', result);
+            // Use defaults if settings can't be loaded
+            renderSettings({
+              slotDuration: 30,
+              gracePeriod: 10,
+              startTime: '10:00',
+              endTime: '14:00'
+            });
+          }
+        })
+        .withFailureHandler(function(err) {
+          console.error('loadSettings failed:', err);
+          // Use defaults if settings can't be loaded
+          renderSettings({
+            slotDuration: 30,
+            gracePeriod: 10,
+            startTime: '10:00',
+            endTime: '14:00'
+          });
+        })
+        .apiGetSettings(adminKey);
+    }
+    
+    // Settings Functions
+    function toggleSettings() {
+      const content = document.getElementById('settingsContent');
+      const icon = document.getElementById('settingsIcon');
+      
+      content.classList.toggle('visible');
+      icon.classList.toggle('expanded');
+    }
+    
+    function renderSettings(settings) {
+      originalSettings = { ...settings };
+      
+      document.getElementById('settingDuration').value = settings.slotDuration || 30;
+      document.getElementById('settingGrace').value = settings.gracePeriod || 10;
+      document.getElementById('settingStart').value = settings.startTime || '10:00';
+      document.getElementById('settingEnd').value = settings.endTime || '14:00';
+      
+      checkSettingsChanged();
+    }
+    
+    function getCurrentSettings() {
+      return {
+        slotDuration: parseInt(document.getElementById('settingDuration').value),
+        gracePeriod: parseInt(document.getElementById('settingGrace').value),
+        startTime: document.getElementById('settingStart').value,
+        endTime: document.getElementById('settingEnd').value,
+      };
+    }
+    
+    function checkSettingsChanged() {
+      const current = getCurrentSettings();
+      const hasChanges = 
+        current.slotDuration !== originalSettings.slotDuration ||
+        current.gracePeriod !== originalSettings.gracePeriod ||
+        current.startTime !== originalSettings.startTime ||
+        current.endTime !== originalSettings.endTime;
+      
+      document.getElementById('saveSettingsBtn').disabled = !hasChanges;
+    }
+    
+    function resetSettings() {
+      renderSettings(originalSettings);
+    }
+    
+    function saveSettings() {
+      const settings = getCurrentSettings();
+      const btn = document.getElementById('saveSettingsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.textContent = 'Save Changes';
+          
+          if (result.success) {
+            showToast('Settings saved!', 'success');
+            originalSettings = { ...settings };
+            checkSettingsChanged();
+          } else {
+            showToast(result.error || 'Failed to save settings', 'error');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.textContent = 'Save Changes';
+          btn.disabled = false;
+          showToast('Failed to save settings', 'error');
+        })
+        .apiUpdateSettings(adminKey, settings);
     }
     
     function loadBookingStatus() {
       google.script.run
-        .withSuccessHandler(renderBookingStatus)
+        .withSuccessHandler(function(result) {
+          // Ensure we always update the status, even if result is unexpected
+          if (!result || result.error) {
+            console.error('loadBookingStatus received error:', result);
+            document.getElementById('toggleStatus').textContent = 'Error loading status';
+            return;
+          }
+          renderBookingStatus(result);
+        })
         .withFailureHandler(function(err) {
+          console.error('loadBookingStatus failed:', err);
           document.getElementById('toggleStatus').textContent = 'Error loading status';
         })
         .apiGetBookingStatus();
     }
     
     function renderBookingStatus(status) {
+      // Handle null/undefined status
+      if (!status) {
+        console.warn('renderBookingStatus received null/undefined status');
+        document.getElementById('toggleStatus').textContent = 'Error loading status';
+        return;
+      }
+      
+      // Handle error objects
+      if (status.error) {
+        console.error('renderBookingStatus received error:', status.error);
+        document.getElementById('toggleStatus').textContent = 'Error loading status';
+        return;
+      }
+      
+      // Ensure status has the expected structure
+      if (typeof status.open === 'undefined') {
+        console.warn('renderBookingStatus received invalid status object:', status);
+        document.getElementById('toggleStatus').textContent = 'Error loading status';
+        return;
+      }
+      
       const statusEl = document.getElementById('toggleStatus');
       const openBtn = document.getElementById('openBtn');
       const closeBtn = document.getElementById('closeBtn');
@@ -622,30 +968,49 @@
     }
     
     function loadBookings() {
+      console.log('Loading bookings with adminKey:', adminKey ? 'present' : 'MISSING');
       google.script.run
-        .withSuccessHandler(renderBookings)
-        .withFailureHandler(handleError)
+        .withSuccessHandler(function(data) {
+          console.log('Bookings data received:', data ? 'data present' : 'null/undefined', data);
+          renderBookings(data);
+        })
+        .withFailureHandler(function(err) {
+          console.error('loadBookings failed:', err, typeof err, err ? err.toString() : 'null error');
+          handleError(err);
+        })
         .apiGetTodayBookings(adminKey);
     }
     
     function renderBookings(bookings) {
+      // Handle null/undefined bookings
+      if (!bookings) {
+        console.warn('renderBookings received null/undefined bookings');
+        bookings = [];
+      }
+      
       if (bookings.error) {
+        console.error('Bookings error:', bookings.error);
         showToast(bookings.error, 'error');
-        return;
+        // Still render empty state instead of returning early
+        bookings = [];
+      }
+      
+      // Ensure bookings is an array
+      if (!Array.isArray(bookings)) {
+        console.warn('renderBookings received non-array bookings:', bookings);
+        bookings = [];
       }
       
       // Update stats
       const stats = {
         total: bookings.length,
         booked: bookings.filter(b => b.status === 'booked').length,
-        checkedIn: bookings.filter(b => b.status === 'checked_in').length,
-        completed: bookings.filter(b => b.status === 'completed').length
+        checkedIn: bookings.filter(b => b.status === 'checked_in').length
       };
       
       document.getElementById('statTotal').textContent = stats.total;
       document.getElementById('statBooked').textContent = stats.booked;
       document.getElementById('statCheckedIn').textContent = stats.checkedIn;
-      document.getElementById('statCompleted').textContent = stats.completed;
       
       // Update last updated time
       document.getElementById('lastUpdated').textContent = 
@@ -667,7 +1032,7 @@
       // Filter to show active bookings first
       const activeStatuses = ['booked', 'checked_in'];
       const active = bookings.filter(b => activeStatuses.includes(b.status));
-      const completed = bookings.filter(b => !activeStatuses.includes(b.status));
+      const inactive = bookings.filter(b => !activeStatuses.includes(b.status));
       
       let html = '<div class="booking-list">';
       
@@ -676,10 +1041,10 @@
         html += renderBookingCard(booking);
       }
       
-      // Completed/expired (collapsed or shown differently)
-      if (completed.length > 0) {
-        html += `<h3 class="section-title" style="margin-top: 1.5rem;">Completed / Expired</h3>`;
-        for (const booking of completed) {
+      // Expired/cancelled
+      if (inactive.length > 0) {
+        html += `<h3 class="section-title" style="margin-top: 1.5rem;">Expired / Cancelled</h3>`;
+        for (const booking of inactive) {
           html += renderBookingCard(booking);
         }
       }
@@ -692,25 +1057,26 @@
       const statusLabels = {
         booked: 'Waiting',
         checked_in: 'Checked In',
-        completed: 'Completed',
         expired: 'No Show',
         cancelled: 'Cancelled'
       };
+      
+      // Use phone and time as identifier (escaped for JS)
+      const phoneEsc = booking.fullPhone;
+      const timeEsc = booking.time;
       
       let actions = '';
       
       switch (booking.status) {
         case 'booked':
           actions = `
-            <button class="action-btn checkin" onclick="doAction('${booking.code}', 'checkin')">Check In</button>
-            <button class="action-btn noshow" onclick="doAction('${booking.code}', 'noshow')">No Show</button>
+            <button class="action-btn checkin" onclick="doAction('${phoneEsc}', '${timeEsc}', 'checkin')">Check In</button>
+            <button class="action-btn noshow" onclick="doAction('${phoneEsc}', '${timeEsc}', 'noshow')">No Show</button>
           `;
           break;
         case 'checked_in':
-          actions = `
-            <button class="action-btn complete" onclick="doAction('${booking.code}', 'complete')">Complete</button>
-            <button class="action-btn cancel" onclick="doAction('${booking.code}', 'cancel')">Cancel</button>
-          `;
+          // No actions needed - they've already checked in
+          actions = '';
           break;
       }
       
@@ -721,8 +1087,7 @@
             <span class="status-badge ${booking.status}">${statusLabels[booking.status] || booking.status}</span>
           </div>
           <div class="info-col">
-            <div class="code">${booking.code}</div>
-            <div class="phone">${booking.phone}</div>
+            <div class="phone">${booking.maskedPhone}</div>
           </div>
           <div class="actions">
             ${actions}
@@ -731,10 +1096,9 @@
       `;
     }
     
-    function doAction(code, action) {
+    function doAction(phone, time, action) {
       const confirmMessages = {
         checkin: 'Mark as checked in?',
-        complete: 'Mark as completed?',
         noshow: 'Mark as no-show?',
         cancel: 'Cancel this booking?'
       };
@@ -755,7 +1119,7 @@
         .withFailureHandler(function(err) {
           showToast('Something went wrong', 'error');
         })
-        .apiAdminAction(code, action, adminKey);
+        .apiAdminAction(phone, time, action, adminKey);
     }
     
     function showToast(message, type) {

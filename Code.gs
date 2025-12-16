@@ -2,15 +2,16 @@
  * Mishawaka Food Pantry - Shower Booking System
  * Google Apps Script Backend
  *
- * PRODUCTION OPTIMIZED VERSION v1.1
+ * PRODUCTION OPTIMIZED VERSION v1.2
  * - Uses CacheService for performance
  * - Batched spreadsheet operations
  * - Rate limiting for abuse prevention
  * - LockService for concurrent booking safety
- * - Improved error handling
+ * - Improved error handling and input validation
+ * - Optimized auto-expiration with batch updates
  */
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 // ============================================
 // CONFIGURATION & CACHING
@@ -198,7 +199,15 @@ function doGet(e) {
 
 function doPost(e) {
   const action = e.parameter.action;
-  const data = JSON.parse(e.postData.contents || '{}');
+  let data;
+
+  try {
+    data = JSON.parse(e.postData.contents || '{}');
+  } catch (e) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ error: 'Invalid request data' })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
 
   switch (action) {
     case 'book':
@@ -404,15 +413,6 @@ function constantTimeCompare(a, b) {
 // TIME & DATE UTILITIES
 // ============================================
 
-function generateCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
 function getTodayString(config) {
   config = config || getConfig();
   const now = new Date();
@@ -541,6 +541,8 @@ function generateTimeSlotsWithConfig(config) {
  * Get today's bookings from sheet (with short-term caching)
  * This is the main data function - caching it significantly reduces load times
  * @param {Object} [config] - Optional config object to avoid re-fetching
+ *
+ * Sheet columns: date (A), time (B), phone (C), status (D), booked_at (E), checked_in_at (F)
  */
 function getTodayBookingsData(config) {
   config = config || getConfig();
@@ -575,10 +577,9 @@ function getTodayBookingsData(config) {
         date: rowDate,
         time: normalizeTimeToString(data[i][1]),
         phone: String(data[i][2]).replace(/\D/g, ''),
-        code: data[i][3],
-        status: data[i][4],
-        bookedAt: data[i][5],
-        checkedInAt: data[i][6],
+        status: data[i][3],
+        bookedAt: data[i][4],
+        checkedInAt: data[i][5],
       });
     }
   }
@@ -658,10 +659,15 @@ function bookSlot(data) {
     return { success: false, error: 'Time and phone number are required.' };
   }
 
-  // Clean phone number
+  // Clean and validate phone number
   const cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.length < 10) {
+  if (cleanPhone.length < 10 || cleanPhone.length > 15) {
     return { success: false, error: 'Please enter a valid phone number.' };
+  }
+
+  // Additional validation: ensure phone is numeric after cleaning
+  if (!/^\d+$/.test(cleanPhone)) {
+    return { success: false, error: 'Invalid phone number format.' };
   }
 
   // Rate limiting
@@ -719,32 +725,17 @@ function bookSlot(data) {
       };
     }
 
-    // Generate unique code
-    let code = generateCode();
-    let attempts = 0;
-    const existingCodes = new Set(todayBookings.map((b) => b.code));
-    while (existingCodes.has(code) && attempts < 10) {
-      code = generateCode();
-      attempts++;
-    }
-
-    // Add the booking
+    // Add the booking (no code column - phone is the identifier)
     const now = new Date();
-    sheet.appendRow([today, time, cleanPhone, code, 'booked', now, '']);
+    sheet.appendRow([today, time, cleanPhone, 'booked', now, '']);
 
     // Invalidate cache after write
     invalidateSlotsCache();
 
-    // Build status URL
-    const scriptUrl = ScriptApp.getService().getUrl();
-    const statusUrl = `${scriptUrl}?page=status&code=${code}`;
-
     return {
       success: true,
-      code: code,
       time: time,
       displayTime: formatTimeForDisplay(time),
-      statusUrl: statusUrl,
     };
   } finally {
     lock.releaseLock();
@@ -755,11 +746,28 @@ function bookSlot(data) {
 // STATUS & CHECK-IN
 // ============================================
 
-function getBookingByCode(code) {
-  if (!code) return null;
+/**
+ * Get booking by phone number (replaces getBookingByCode)
+ */
+function getBookingByPhone(phone) {
+  if (!phone || typeof phone !== 'string') return null;
 
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.length < 10) return null;
   const todayBookings = getTodayBookingsData();
-  const booking = todayBookings.find((b) => b.code === code);
+
+  // Find active booking for this phone (booked or checked_in)
+  let booking = todayBookings.find(
+    (b) => b.phone === cleanPhone && ['booked', 'checked_in'].includes(b.status)
+  );
+
+  // If no active booking, find the most recent expired/cancelled one
+  if (!booking) {
+    booking = todayBookings.find(
+      (b) =>
+        b.phone === cleanPhone && ['expired', 'cancelled'].includes(b.status)
+    );
+  }
 
   if (booking) {
     return {
@@ -771,8 +779,8 @@ function getBookingByCode(code) {
   return null;
 }
 
-function getBookingStatus(code) {
-  const booking = getBookingByCode(code);
+function getBookingStatus(phone) {
+  const booking = getBookingByPhone(phone);
   const config = getConfig();
 
   if (!booking) {
@@ -800,8 +808,13 @@ function getBookingStatus(code) {
 }
 
 function checkIn(data) {
-  const { code } = data;
-  const booking = getBookingByCode(code);
+  const { phone } = data;
+
+  if (!phone) {
+    return { success: false, error: 'Phone number is required.' };
+  }
+
+  const booking = getBookingByPhone(phone);
 
   if (!booking) {
     return { success: false, error: 'Booking not found.' };
@@ -835,10 +848,10 @@ function checkIn(data) {
     };
   }
 
-  // Update status
+  // Update status (column D is status, column F is checked_in_at)
   const sheet = getSlotsSheet();
-  sheet.getRange(booking.row, 5).setValue('checked_in');
-  sheet.getRange(booking.row, 7).setValue(new Date());
+  sheet.getRange(booking.row, 4).setValue('checked_in');
+  sheet.getRange(booking.row, 6).setValue(new Date());
 
   // Invalidate cache
   invalidateSlotsCache();
@@ -857,11 +870,13 @@ function checkIn(data) {
 function getTodayBookings() {
   const todayBookings = getTodayBookingsData();
 
-  // Add display formatting and mask phones
+  // Add display formatting and mask phones for display
   const formatted = todayBookings.map((booking) => ({
     ...booking,
     displayTime: formatTimeForDisplay(booking.time),
-    phone: maskPhone(booking.phone),
+    maskedPhone: maskPhone(booking.phone),
+    // Keep full phone for admin actions
+    fullPhone: booking.phone,
   }));
 
   // Sort by time
@@ -875,8 +890,16 @@ function maskPhone(phone) {
   return '***-***-' + phone.slice(-4);
 }
 
+/**
+ * Admin action - now uses phone+time as identifier instead of code
+ */
 function adminAction(data) {
-  const { code, action, adminKey } = data;
+  const { phone, time, action, adminKey } = data;
+
+  if (!phone || !time || !action || !adminKey) {
+    return { success: false, error: 'Missing required parameters.' };
+  }
+
   const config = getConfig();
 
   if (!constantTimeCompare(adminKey, config.adminKey)) {
@@ -888,32 +911,33 @@ function adminAction(data) {
     return { success: false, error: 'Too many actions. Please wait a moment.' };
   }
 
-  const booking = getBookingByCode(code);
+  // Find booking by phone and time
+  const todayBookings = getTodayBookingsData(config);
+  const booking = todayBookings.find(
+    (b) => b.phone === phone && b.time === time
+  );
+
   if (!booking) {
     return { success: false, error: 'Booking not found.' };
   }
 
   const sheet = getSlotsSheet();
 
+  // Column indices: D=status (4), F=checked_in_at (6)
   switch (action) {
     case 'checkin':
-      sheet.getRange(booking.row, 5).setValue('checked_in');
-      sheet.getRange(booking.row, 7).setValue(new Date());
+      sheet.getRange(booking.row, 4).setValue('checked_in');
+      sheet.getRange(booking.row, 6).setValue(new Date());
       invalidateSlotsCache();
       return { success: true, message: 'Marked as checked in.' };
 
-    case 'complete':
-      sheet.getRange(booking.row, 5).setValue('completed');
-      invalidateSlotsCache();
-      return { success: true, message: 'Marked as completed.' };
-
     case 'noshow':
-      sheet.getRange(booking.row, 5).setValue('expired');
+      sheet.getRange(booking.row, 4).setValue('expired');
       invalidateSlotsCache();
       return { success: true, message: 'Marked as no-show.' };
 
     case 'cancel':
-      sheet.getRange(booking.row, 5).setValue('cancelled');
+      sheet.getRange(booking.row, 4).setValue('cancelled');
       invalidateSlotsCache();
       return { success: true, message: 'Booking cancelled.' };
 
@@ -930,10 +954,10 @@ function autoExpireSlots() {
   const sheet = getSlotsSheet();
   const data = sheet.getDataRange().getValues();
   const config = getConfig();
-  const today = getTodayString();
-  const now = getCurrentTime();
+  const today = getTodayString(config);
+  const now = getCurrentTime(config);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  let expiredCount = 0;
+  const rowsToExpire = [];
 
   for (let i = 1; i < data.length; i++) {
     let rowDate = data[i][0];
@@ -942,23 +966,27 @@ function autoExpireSlots() {
     }
 
     const rowTime = normalizeTimeToString(data[i][1]);
-    const rowStatus = data[i][4];
+    const rowStatus = data[i][3]; // Column D is status
 
     if (rowDate === today && rowStatus === 'booked') {
       const slotMinutes = timeToMinutes(rowTime);
       const expireTime = slotMinutes + config.gracePeriod;
 
       if (currentMinutes > expireTime) {
-        sheet.getRange(i + 1, 5).setValue('expired');
-        expiredCount++;
+        rowsToExpire.push(i + 1);
       }
     }
   }
 
-  if (expiredCount > 0) {
+  // Update expired slots (individual updates needed for non-contiguous rows)
+  if (rowsToExpire.length > 0) {
+    for (const row of rowsToExpire) {
+      sheet.getRange(row, 4).setValue('expired');
+    }
+
     invalidateSlotsCache();
     if (config.debugMode) {
-      Logger.log(`Auto-expired ${expiredCount} slots`);
+      Logger.log(`Auto-expired ${rowsToExpire.length} slots`);
     }
   }
 }
@@ -967,7 +995,7 @@ function dailyMaintenance() {
   const sheet = getSlotsSheet();
   const data = sheet.getDataRange().getValues();
   const config = getConfig();
-  const today = getTodayString();
+  const today = getTodayString(config);
 
   // Delete all rows older than today (keep header)
   const rowsToDelete = [];
@@ -983,8 +1011,12 @@ function dailyMaintenance() {
   }
 
   // Delete from bottom to top to maintain row indices
-  for (const row of rowsToDelete) {
-    sheet.deleteRow(row);
+  // Batch deletion is more efficient for large datasets
+  if (rowsToDelete.length > 0) {
+    // Delete in reverse order to maintain indices
+    for (let i = rowsToDelete.length - 1; i >= 0; i--) {
+      sheet.deleteRow(rowsToDelete[i]);
+    }
   }
 
   // Clear all caches
@@ -1009,11 +1041,11 @@ function apiBookSlot(time, phone) {
   return bookSlot({ time, phone });
 }
 
-function apiGetBookingStatus(code, config) {
-  // This function is overloaded - with code it returns booking status
-  // Without code (or called internally) it returns booking system status
-  if (code) {
-    return getBookingStatus(code);
+function apiGetBookingStatus(phone, config) {
+  // This function is overloaded - with phone it returns booking status
+  // Without phone (or called internally) it returns booking system status
+  if (phone) {
+    return getBookingStatus(phone);
   }
 
   config = config || getConfig();
@@ -1040,6 +1072,40 @@ function apiGetBookingStatus(code, config) {
     };
   }
 
+  // Check if booking opens 30 minutes before start time
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = timeToMinutes(config.startTime);
+  const endMinutes = timeToMinutes(config.endTime);
+  const bookingOpensAt = startMinutes - 30; // Opens 30 min before first shower
+
+  if (currentMinutes < bookingOpensAt) {
+    // Calculate when booking opens for display
+    const opensHour = Math.floor(bookingOpensAt / 60);
+    const opensMin = bookingOpensAt % 60;
+    const period = opensHour >= 12 ? 'PM' : 'AM';
+    const displayHour =
+      opensHour > 12 ? opensHour - 12 : opensHour === 0 ? 12 : opensHour;
+    const opensTimeDisplay = `${displayHour}:${opensMin
+      .toString()
+      .padStart(2, '0')} ${period}`;
+
+    return {
+      open: false,
+      reason: 'too_early',
+      message: `Shower booking opens at ${opensTimeDisplay} (30 minutes before the first available shower). Please check back then.`,
+    };
+  }
+
+  // Check if we're past the end time
+  if (currentMinutes >= endMinutes) {
+    return {
+      open: false,
+      reason: 'closed_for_day',
+      message:
+        'Shower booking for today has ended. Please come back tomorrow during operating hours.',
+    };
+  }
+
   return {
     open: true,
     reason: null,
@@ -1047,12 +1113,16 @@ function apiGetBookingStatus(code, config) {
   };
 }
 
-function apiCheckIn(code) {
-  return checkIn({ code });
+function apiCheckIn(phone) {
+  return checkIn({ phone });
 }
 
-function apiCancelExpiredBooking(code) {
-  const booking = getBookingByCode(code);
+function apiCancelExpiredBooking(phone) {
+  if (!phone) {
+    return { success: false, error: 'Phone number is required.' };
+  }
+
+  const booking = getBookingByPhone(phone);
 
   if (!booking) {
     return { success: false, error: 'Booking not found.' };
@@ -1073,15 +1143,63 @@ function apiCancelExpiredBooking(code) {
   }
 
   const sheet = getSlotsSheet();
-  sheet.getRange(booking.row, 5).setValue('expired');
+  sheet.getRange(booking.row, 4).setValue('expired'); // Column D
   invalidateSlotsCache();
 
   return { success: true };
 }
 
+/**
+ * Cancel a booking (user-initiated)
+ * - If the slot time hasn't passed, the slot is released for others to book
+ * - If the slot time has already passed, it's just marked cancelled (not re-released)
+ */
+function apiCancelBooking(phone) {
+  if (!phone) {
+    return { success: false, error: 'Phone number is required.' };
+  }
+
+  const booking = getBookingByPhone(phone);
+
+  if (!booking) {
+    return { success: false, error: 'Booking not found.' };
+  }
+
+  if (booking.status !== 'booked') {
+    return { success: false, error: 'This booking cannot be cancelled.' };
+  }
+
+  const config = getConfig();
+  const now = getCurrentTime();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const slotMinutes = timeToMinutes(booking.time);
+  const minutesUntil = slotMinutes - currentMinutes;
+
+  // Mark as cancelled (Column D)
+  const sheet = getSlotsSheet();
+  sheet.getRange(booking.row, 4).setValue('cancelled');
+  invalidateSlotsCache();
+
+  // Determine if the slot can be re-released for booking
+  // Only if the slot time is still in the future (with a small buffer)
+  const slotReleased = minutesUntil > 0;
+
+  return {
+    success: true,
+    slotReleased: slotReleased,
+    message: slotReleased
+      ? 'Your reservation has been cancelled. The time slot is now available for others.'
+      : 'Your reservation has been cancelled.',
+  };
+}
+
 function apiLookupByPhone(phone) {
+  if (!phone || typeof phone !== 'string') {
+    return { found: false, error: 'Invalid phone number' };
+  }
+
   const cleanPhone = phone.replace(/\D/g, '');
-  if (cleanPhone.length < 10) {
+  if (cleanPhone.length < 10 || cleanPhone.length > 15) {
     return { found: false, error: 'Invalid phone number' };
   }
 
@@ -1110,7 +1228,6 @@ function apiLookupByPhone(phone) {
       date: booking.date,
       time: booking.time,
       displayTime: formatTimeForDisplay(booking.time),
-      code: booking.code,
       status: booking.status,
       minutesUntil: minutesUntil,
       canCheckIn:
@@ -1139,31 +1256,88 @@ function apiLookupByPhone(phone) {
 }
 
 function apiGetTodayBookings(adminKey) {
-  const config = getConfig();
-  if (!constantTimeCompare(adminKey, config.adminKey)) {
-    return { error: 'Invalid admin key' };
+  try {
+    const config = getConfig();
+    if (!constantTimeCompare(adminKey, config.adminKey)) {
+      return { error: 'Invalid admin key' };
+    }
+    try {
+      return getTodayBookings();
+    } catch (innerError) {
+      Logger.log('Error in getTodayBookings: ' + innerError.message);
+      return {
+        error: 'Failed to load bookings: ' + innerError.message,
+        bookings: [],
+      };
+    }
+  } catch (error) {
+    Logger.log('Error in apiGetTodayBookings: ' + error.message);
+    return { error: 'Failed to load bookings: ' + error.message, bookings: [] };
   }
-  return getTodayBookings();
 }
 
 /**
  * Combined API for admin page initial load
  */
 function apiGetAdminInitialData(adminKey) {
-  const config = getConfig();
-  if (!constantTimeCompare(adminKey, config.adminKey)) {
-    return { error: 'Invalid admin key' };
-  }
+  try {
+    const config = getConfig();
+    if (!constantTimeCompare(adminKey, config.adminKey)) {
+      return { error: 'Invalid admin key' };
+    }
 
-  return {
-    bookings: getTodayBookings(),
-    bookingStatus: apiGetBookingStatus(null, config),
-    version: APP_VERSION,
-  };
+    try {
+      const bookings = getTodayBookings();
+      const bookingStatus = apiGetBookingStatus(null, config);
+
+      return {
+        bookings: bookings || [],
+        bookingStatus: bookingStatus || { open: true },
+        settings: {
+          slotDuration: config.slotDuration,
+          gracePeriod: config.gracePeriod,
+          startTime: config.startTime,
+          endTime: config.endTime,
+        },
+        version: APP_VERSION,
+      };
+    } catch (innerError) {
+      Logger.log(
+        'Error in apiGetAdminInitialData data fetching: ' + innerError.message
+      );
+      // Return partial data with error indication
+      return {
+        error: 'Failed to load bookings data: ' + innerError.message,
+        bookings: [],
+        bookingStatus: apiGetBookingStatus(null, config) || { open: true },
+        settings: {
+          slotDuration: config.slotDuration,
+          gracePeriod: config.gracePeriod,
+          startTime: config.startTime,
+          endTime: config.endTime,
+        },
+        version: APP_VERSION,
+      };
+    }
+  } catch (error) {
+    Logger.log('Error in apiGetAdminInitialData: ' + error.message);
+    return {
+      error: 'Failed to load admin data: ' + error.message,
+      bookings: [],
+      bookingStatus: { open: true, error: true },
+      settings: {
+        slotDuration: 30,
+        gracePeriod: 10,
+        startTime: '10:00',
+        endTime: '14:00',
+      },
+      version: APP_VERSION,
+    };
+  }
 }
 
-function apiAdminAction(code, action, adminKey) {
-  return adminAction({ code, action, adminKey });
+function apiAdminAction(phone, time, action, adminKey) {
+  return adminAction({ phone, time, action, adminKey });
 }
 
 function apiGetCurrentTime() {
@@ -1172,6 +1346,36 @@ function apiGetCurrentTime() {
   return {
     time: Utilities.formatDate(now, config.timezone, 'h:mm a'),
     date: Utilities.formatDate(now, config.timezone, 'EEEE, MMMM d, yyyy'),
+  };
+}
+
+/**
+ * Verify admin key (for staff login)
+ * Returns { valid: true/false, adminUrl: string } - doesn't expose why it's invalid
+ */
+function apiVerifyAdminKey(key) {
+  const config = getConfig();
+
+  // Small delay to prevent brute force timing attacks
+  Utilities.sleep(200);
+
+  const isValid = constantTimeCompare(key, config.adminKey);
+
+  // Get the actual deployed web app URL (not the editor preview URL)
+  let adminUrl = null;
+  if (isValid) {
+    try {
+      const scriptUrl = ScriptApp.getService().getUrl();
+      adminUrl = scriptUrl + '?page=admin&key=' + encodeURIComponent(key);
+    } catch (e) {
+      // If we can't get the service URL, return null and let frontend handle it
+      Logger.log('Could not get service URL: ' + e.message);
+    }
+  }
+
+  return {
+    valid: isValid,
+    adminUrl: adminUrl,
   };
 }
 
@@ -1227,7 +1431,6 @@ function apiLookupByPhoneInternal(cleanPhone, config) {
       date: booking.date,
       time: booking.time,
       displayTime: formatTimeForDisplay(booking.time),
-      code: booking.code,
       status: booking.status,
       minutesUntil: minutesUntil,
       canCheckIn:
@@ -1304,6 +1507,126 @@ function apiSetBookingStatus(adminKey, isOpen, customMessage) {
   } catch (e) {
     Logger.log('Error setting booking status: ' + e.message);
     return { success: false, error: 'Failed to update configuration' };
+  }
+}
+
+/**
+ * Get current settings for admin panel
+ */
+function apiGetSettings(adminKey) {
+  const config = getConfig();
+
+  if (!constantTimeCompare(adminKey, config.adminKey)) {
+    return { success: false, error: 'Invalid admin key' };
+  }
+
+  return {
+    success: true,
+    settings: {
+      slotDuration: config.slotDuration,
+      gracePeriod: config.gracePeriod,
+      startTime: config.startTime,
+      endTime: config.endTime,
+    },
+  };
+}
+
+/**
+ * Update settings from admin panel
+ * Only allows updating: slot_duration_min, grace_period_min, start_time, end_time
+ */
+function apiUpdateSettings(adminKey, settings) {
+  const config = getConfig();
+
+  if (!constantTimeCompare(adminKey, config.adminKey)) {
+    return { success: false, error: 'Invalid admin key' };
+  }
+
+  // Validate settings
+  if (settings.slotDuration !== undefined) {
+    const duration = parseInt(settings.slotDuration);
+    if (isNaN(duration) || duration < 10 || duration > 120) {
+      return {
+        success: false,
+        error: 'Shower duration must be between 10 and 120 minutes',
+      };
+    }
+  }
+
+  if (settings.gracePeriod !== undefined) {
+    const grace = parseInt(settings.gracePeriod);
+    if (isNaN(grace) || grace < 0 || grace > 60) {
+      return {
+        success: false,
+        error: 'Late check-in window must be between 0 and 60 minutes',
+      };
+    }
+  }
+
+  if (settings.startTime !== undefined || settings.endTime !== undefined) {
+    const startTime = settings.startTime || config.startTime;
+    const endTime = settings.endTime || config.endTime;
+
+    // Validate time format
+    const timeRegex = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+      return {
+        success: false,
+        error: 'Invalid time format. Use HH:MM (e.g., 09:00)',
+      };
+    }
+
+    // Validate end time is after start time
+    const startMins = timeToMinutes(startTime);
+    const endMins = timeToMinutes(endTime);
+    if (endMins <= startMins) {
+      return {
+        success: false,
+        error: 'Closing time must be after opening time',
+      };
+    }
+  }
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const configSheet = ss.getSheetByName('Config');
+    const data = configSheet.getDataRange().getValues();
+
+    // Map setting keys to config keys
+    const settingsMap = {
+      slotDuration: 'slot_duration_min',
+      gracePeriod: 'grace_period_min',
+      startTime: 'start_time',
+      endTime: 'end_time',
+    };
+
+    // Find rows for each setting
+    const rowMap = {};
+    for (let i = 1; i < data.length; i++) {
+      const key = data[i][0];
+      rowMap[key] = i + 1;
+    }
+
+    // Update each provided setting
+    for (const [jsKey, configKey] of Object.entries(settingsMap)) {
+      if (settings[jsKey] !== undefined) {
+        const value = settings[jsKey];
+
+        if (rowMap[configKey]) {
+          configSheet.getRange(rowMap[configKey], 2).setValue(value);
+        } else {
+          configSheet.appendRow([configKey, value]);
+        }
+      }
+    }
+
+    // Clear config cache
+    clearConfigCache();
+
+    return { success: true, message: 'Settings updated successfully' };
+  } catch (e) {
+    Logger.log('Error updating settings: ' + e.message);
+    return { success: false, error: 'Failed to update settings' };
   }
 }
 
