@@ -1,0 +1,26 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor/IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Google Apps Script / clasp (if using local development)
+.clasp.json
+.clasprc.json
+
+# Logs
+*.log
+
+# Node.js (in case you ever add dependencies)
+node_modules/
+
+# Environment files (if you ever add any)
+.env
+.env.local
+.env.*.local
