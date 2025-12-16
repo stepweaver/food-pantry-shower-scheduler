@@ -352,6 +352,11 @@
       color: var(--success);
     }
     
+    .status-badge.late {
+      background: rgba(201, 68, 68, 0.15);
+      color: var(--error);
+    }
+    
     .status-header {
       text-align: center;
       padding: 1.5rem 1rem;
@@ -397,6 +402,10 @@
     
     .countdown.past {
       background: linear-gradient(135deg, var(--warning), #d4a23a);
+    }
+    
+    .countdown.expired {
+      background: linear-gradient(135deg, var(--error), #a83838);
     }
     
     .info-box {
@@ -1570,6 +1579,15 @@
       }
       
       let actionHtml = '';
+      let statusBadgeHtml = '<span class="status-badge booked">Reserved</span>';
+      let countdownHtml = `
+        <div class="countdown ${countdownClass}">
+          <div class="label">${countdownLabel}</div>
+          <div class="value">${countdownText}</div>
+          ${checkInTimingHtml}
+        </div>
+      `;
+      
       if (b.canCheckIn) {
         actionHtml = `
           <button class="btn btn-success" onclick="doCheckIn()">
@@ -1591,11 +1609,18 @@
           </div>
         `;
       } else {
-        // Grace period has passed - cannot check in
+        // Grace period has passed - cannot check in - make this VERY obvious
+        statusBadgeHtml = '<span class="status-badge late">LATE CHECK-IN</span>';
+        countdownHtml = `
+          <div class="countdown expired">
+            <div class="label">Your Time Was</div>
+            <div class="value">${Math.abs(minutesUntil)} min ago</div>
+          </div>
+        `;
         actionHtml = `
-          <div class="message warning" style="text-align: center; padding: 1.25rem;">
-            <strong style="display: block; margin-bottom: 0.5rem;">Check-In Window Closed</strong>
-            Your reservation time has passed. Please speak with the staff. Late arrivals may not be accommodated.
+          <div class="message error" style="text-align: center; padding: 1.25rem;">
+            <strong style="display: block; margin-bottom: 0.5rem; font-size: 1.1rem;">Check-In Window Closed</strong>
+            Your reservation time has passed. Please speak with staff immediately. Late arrivals may not be accommodated.
           </div>
           <button class="btn btn-primary" onclick="rebookNewTime()">
             Book a Different Time
@@ -1605,18 +1630,14 @@
       
       container.innerHTML = `
         <div class="status-header">
-          <span class="status-badge booked">Reserved</span>
+          ${statusBadgeHtml}
           
           <div class="time-display">
             <div class="label">Your Shower Time</div>
             <div class="time">${b.displayTime}</div>
           </div>
           
-          <div class="countdown ${countdownClass}">
-            <div class="label">${countdownLabel}</div>
-            <div class="value">${countdownText}</div>
-            ${checkInTimingHtml}
-          </div>
+          ${countdownHtml}
         </div>
         ${actionHtml}
       `;
