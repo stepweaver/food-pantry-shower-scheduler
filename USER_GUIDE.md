@@ -296,7 +296,7 @@ This controls how the system works. Here's what each setting does:
 | ---------------------- | --------------------------------------------------------------------- | ----------------------------------- |
 | slot_duration_min      | How long each shower slot is (in minutes)                             | 30                                  |
 | grace_period_min       | How late someone can be and still check in (in minutes)               | 10                                  |
-| start_time             | When the first shower is available                                    | 7:00                                |
+| start_time             | When the first shower is available                                    | 10:00                               |
 | end_time               | When the last shower slot ends                                        | 14:00                               |
 | slots_per_time         | How many people can book the same time (if you have multiple showers) | 1                                   |
 | admin_key              | The password for the staff dashboard                                  | mishawaka2025                       |
@@ -467,7 +467,7 @@ If you're setting up the system for the first time:
 | ----------------- | ------- | ------------------- |
 | slot_duration_min | 30      | Minutes per shower  |
 | grace_period_min  | 10      | Late arrival window |
-| start_time        | 7:00    | First shower time   |
+| start_time        | 10:00   | First shower time   |
 | end_time          | 14:00   | Last shower start   |
 | slots_per_time    | 1       | Concurrent bookings |
 | weekdays_only     | ☑       | Monday-Friday only  |

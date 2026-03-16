@@ -1,10 +1,47 @@
-# Mishawaka Food Pantry - Shower Booking System
+# Mishawaka Shower Booking System
 
-A self-service shower booking system built with Google Apps Script. Solves the "people waiting around all day" problem by letting users book specific time slots from their phones.
+A concept and working prototype for a zero-cost shower booking workflow built with Google Apps Script, Google Sheets, and a mobile-first web interface.
 
-**The Problem:** The pantry had to discontinue shower services because homeless individuals were waiting around all day hoping to get a shower.
+## Project Status
 
-**The Solution:** Users book a specific time slot, leave, and return within 10 minutes of their scheduled time. No waiting required. No staff tablets. No SMS costs.
+This project is currently a concept / prototype, not a live production deployment.
+
+I designed and built it to show how a food pantry or similar community organization could offer shower scheduling without paying for hosting, SMS, tablets, or a custom backend. The booking flow, admin dashboard, configuration model, and maintenance automation are built, but I have not yet completed rollout with the organization or gathered live usage metrics.
+
+## The Problem
+
+The goal was to address a simple operational problem: people waiting around all day hoping to get a shower, which creates congestion, uncertainty, and strain on staff.
+
+## The Concept
+
+Instead of asking people to wait on-site, this prototype lets them:
+
+- enter a phone number
+- reserve an available time slot
+- leave and return near their scheduled time
+- check in from the same page during the allowed window
+
+Staff get a lightweight dashboard to view bookings, check people in manually, close bookings, and adjust basic settings.
+
+## What This Project Demonstrates
+
+- Google Apps Script as a lightweight app backend
+- Google Sheets as a configurable, non-technical data layer
+- a mobile-first public booking experience
+- a staff-facing admin dashboard
+- rate limiting and concurrency protection with CacheService and LockService
+- privacy-minded cleanup with daily data deletion
+- a zero-infrastructure workflow for community organizations
+
+## Current Capabilities
+
+- Public booking flow for same-day reservations
+- Phone-number-based reservation lookup
+- Check-in window management
+- Staff dashboard for booking visibility and actions
+- Config-driven hours and rules via Google Sheets
+- Automatic expiration and daily cleanup triggers
+- Basic abuse prevention with rate limiting
 
 ## Quick Start
 
@@ -92,9 +129,12 @@ Add a link or button to your Apps Script Web App URL. For example:
 | File | Purpose |
 |------|---------|
 | `Code.gs` | Main Apps Script backend with caching, rate limiting & locking |
-| `booking.html` | Public booking page (handles both booking and status) |
+| `booking.html` | Public booking interface (handles both booking and status) |
 | `admin.html` | Staff dashboard for managing bookings |
-| `SIGNAGE.html` | Printable sign with QR code placeholder |
+| `SIGNAGE.html` | Printable sign / QR handoff |
+| `SETUP_GUIDE.md` | Deployment and setup instructions |
+| `USER_GUIDE.md` | Plain-language guide for staff and users |
+| `CASE_STUDY.md` | Project narrative and portfolio notes |
 
 ## Features
 

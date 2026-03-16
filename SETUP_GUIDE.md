@@ -8,7 +8,7 @@ This guide walks you through setting up the shower booking system. It takes abou
 
 ## What This System Does
 
-The pantry discontinued showers because people were waiting around all day. This system solves that by letting people:
+The pantry discontinued showers because people were waiting around all day. This system is designed to address that by letting people:
 
 1. **Book a specific time slot** from their own phone
 2. **Leave and come back** — no need to wait at the pantry
@@ -55,10 +55,9 @@ Add these column headers in **Row 1**:
 | A1 | date |
 | B1 | time |
 | C1 | phone |
-| D1 | code |
-| E1 | status |
-| F1 | booked_at |
-| G1 | checked_in_at |
+| D1 | status |
+| E1 | booked_at |
+| F1 | checked_in_at |
 
 ### Create the Config sheet
 
@@ -231,7 +230,7 @@ In the Squarespace page editor:
 1. Visit your booking link on their phone
 2. Enter phone number (saved automatically for future visits)
 3. Pick an available time slot
-4. See confirmation with check-in code
+4. See confirmation with their scheduled time and countdown
 5. **They don't need to wait at the pantry!** They can leave and return later
 6. Come back within 10 minutes of scheduled time
 7. Revisit the same page—their phone number is remembered
@@ -415,12 +414,9 @@ Post this sign where people can see it:
 1. **Visit on your phone:**
    `themishawakafoodpantry.com/shower`
 2. **Pick an available time**
-
-3. **Save your confirmation code**
-
+3. **Remember your time** (or reopen the page later to see it)
 4. **Return within 10 minutes** of your scheduled time
-
-5. **Check in** on your phone or tell staff your code
+5. **Check in** on your phone or tell staff your phone number
 
 ---
 
